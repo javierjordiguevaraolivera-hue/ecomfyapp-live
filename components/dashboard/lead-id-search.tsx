@@ -22,12 +22,14 @@ export function LeadIdSearch() {
       params.delete("lead_id");
     }
 
+    params.delete("page");
     router.push(`/dashboard?${params.toString()}`);
   };
 
   const clearSearch = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("lead_id");
+    params.delete("page");
     setValue("");
     router.push(`/dashboard?${params.toString()}`);
   };

@@ -23,6 +23,8 @@ export type LeadQueryOptions = {
   sort: SortDirection;
   filters?: LeadFilters;
   leadIdSearch?: string;
+  page?: number;
+  pageSize?: number;
 };
 
 const filterKeys: LeadFilterKey[] = [
@@ -60,9 +62,13 @@ export async function getLeadDashboardRows({
   sort,
   filters = {},
   leadIdSearch,
+  page = 1,
+  pageSize = 100,
 }: LeadQueryOptions) {
   const supabase = createLeadsClient();
   const range = getDateRange(dateFilter, timezone);
+  const from = Math.max(page - 1, 0) * pageSize;
+  const to = from + pageSize - 1;
   let query = supabase
     .from("leads")
     .select(
@@ -70,7 +76,7 @@ export async function getLeadDashboardRows({
       { count: "exact" },
     )
     .order("created_at", { ascending: sort === "asc" })
-    .limit(250);
+    .range(from, to);
 
   if (range) {
     query = query.gte("created_at", range.from).lt("created_at", range.to);

@@ -120,6 +120,7 @@ function FilterableHeader({
       params.delete(filterKey);
     }
 
+    params.delete("page");
     return `/dashboard?${params.toString()}`;
   };
 

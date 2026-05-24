@@ -18,11 +18,13 @@ import {
 import type { DateFilter, LeadFilterKey, LeadFilters } from "@/lib/leads/types";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
 type SearchParams = Record<string, string | string[] | undefined>;
+const PAGE_SIZE = 100;
 
 const filterKeys: LeadFilterKey[] = [
   "funnel_id",
@@ -70,6 +72,10 @@ function makeDashboardHref(
     params.set(key, value);
   });
 
+  if (!("page" in nextValues)) {
+    params.delete("page");
+  }
+
   return `/dashboard?${params.toString()}`;
 }
 
@@ -85,6 +91,16 @@ function getActiveFilters(searchParams: SearchParams) {
   }, {} as LeadFilters);
 }
 
+function normalizePage(value?: string) {
+  const page = Number(value);
+
+  if (!Number.isInteger(page) || page < 1) {
+    return 1;
+  }
+
+  return page;
+}
+
 function FilterButton({
   active,
   href,
@@ -97,9 +113,140 @@ function FilterButton({
   children: React.ReactNode;
 }) {
   return (
-    <Button asChild className={className} variant={active ? "default" : "outline"}>
+    <Button
+      asChild
+      className={className}
+      variant={active ? "default" : "outline"}
+    >
       <Link href={href}>{children}</Link>
     </Button>
+  );
+}
+
+function TimezoneSwitcher({
+  searchParams,
+  timezone,
+}: {
+  searchParams: SearchParams;
+  timezone: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
+        Timezone:
+      </span>
+      <FilterButton
+        active={timezone === "America/New_York"}
+        className={
+          timezone === "America/New_York"
+            ? "h-9 w-12 bg-muted text-foreground hover:bg-muted/80"
+            : "h-9 w-12"
+        }
+        href={makeDashboardHref(searchParams, {
+          timezone: "America/New_York",
+        })}
+      >
+        <img
+          alt="New York"
+          className="h-5 w-5 rounded-full object-cover"
+          src="/assets/flag-for-usa.png"
+        />
+      </FilterButton>
+      <FilterButton
+        active={timezone === "America/Lima"}
+        className={
+          timezone === "America/Lima"
+            ? "h-9 w-12 bg-muted text-foreground hover:bg-muted/80"
+            : "h-9 w-12"
+        }
+        href={makeDashboardHref(searchParams, {
+          timezone: "America/Lima",
+        })}
+      >
+        <img
+          alt="Lima"
+          className="h-5 w-5 rounded-full object-cover"
+          src="/assets/flag-peru.png"
+        />
+      </FilterButton>
+    </div>
+  );
+}
+
+function SortIconButton({
+  active,
+  href,
+  direction,
+}: {
+  active: boolean;
+  href: string;
+  direction: "desc" | "asc";
+}) {
+  const Icon = direction === "desc" ? ArrowDown : ArrowUp;
+
+  return (
+    <Button
+      asChild
+      className="h-9 w-9"
+      size="icon"
+      title={direction === "desc" ? "Nuevo primero" : "Viejo primero"}
+      variant={active ? "default" : "outline"}
+    >
+      <Link href={href}>
+        <Icon aria-hidden="true" />
+        <span className="sr-only">
+          {direction === "desc" ? "Nuevo primero" : "Viejo primero"}
+        </span>
+      </Link>
+    </Button>
+  );
+}
+
+function PaginationControls({
+  currentPage,
+  totalCount,
+  searchParams,
+}: {
+  currentPage: number;
+  totalCount: number;
+  searchParams: SearchParams;
+}) {
+  const totalPages = Math.max(Math.ceil(totalCount / PAGE_SIZE), 1);
+  const hasPrevious = currentPage > 1;
+  const hasNext = currentPage < totalPages;
+
+  return (
+    <div className="flex items-center justify-between gap-3 py-1">
+      <p className="text-sm text-muted-foreground">
+        Pagina {currentPage} de {totalPages}
+      </p>
+      <div className="flex gap-2">
+        <Button asChild disabled={!hasPrevious} variant="outline">
+          <Link
+            aria-disabled={!hasPrevious}
+            className={!hasPrevious ? "pointer-events-none opacity-50" : ""}
+            href={makeDashboardHref(searchParams, {
+              page: String(Math.max(currentPage - 1, 1)),
+            })}
+          >
+            <ChevronLeft />
+            Anterior
+          </Link>
+        </Button>
+        <Button asChild disabled={!hasNext} variant="outline">
+          <Link
+            aria-disabled={!hasNext}
+            className={!hasNext ? "pointer-events-none opacity-50" : ""}
+            href={makeDashboardHref(searchParams, {
+              page: String(Math.min(currentPage + 1, totalPages)),
+            })}
+          >
+            Siguiente
+            <ChevronRight />
+          </Link>
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -114,6 +261,7 @@ async function DashboardContent({
   const dateFilter = normalizeDateFilter(getSearchValue(searchParams, "date"));
   const timezone = normalizeTimezone(getSearchValue(searchParams, "timezone"));
   const sort = normalizeSortDirection(getSearchValue(searchParams, "sort"));
+  const currentPage = normalizePage(getSearchValue(searchParams, "page"));
   const activeFilters = getActiveFilters(searchParams);
   const leadIdSearch = getSearchValue(searchParams, "lead_id")?.trim();
   let result:
@@ -141,6 +289,8 @@ async function DashboardContent({
           sort,
           filters: activeFilters,
           leadIdSearch,
+          page: currentPage,
+          pageSize: PAGE_SIZE,
         }),
         getLeadFilterOptions({
           dateFilter,
@@ -183,6 +333,12 @@ async function DashboardContent({
             src="/assets/Ecomfy-Lead-Logo.png"
           />
           <div className="flex items-center gap-3">
+            <div className="hidden sm:flex">
+              <TimezoneSwitcher
+                searchParams={searchParams}
+                timezone={timezone}
+              />
+            </div>
             <span className="hidden text-sm text-muted-foreground sm:inline">
               {session.email}
             </span>
@@ -197,10 +353,6 @@ async function DashboardContent({
           <div className="space-y-1">
             <CardTitle className="text-xl">Leads</CardTitle>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
-              <span>
-                {result.totalCount} resultados encontrados. Mostrando hasta
-                250.
-              </span>
               <span className="text-foreground">Leads hoy: {todayCount}</span>
               <span className="text-foreground">
                 Leads ayer: {yesterdayCount}
@@ -211,100 +363,42 @@ async function DashboardContent({
           <div className="flex flex-col gap-3 sm:gap-4">
             <LeadIdSearch />
 
-            <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center justify-between gap-3 sm:block lg:flex">
                 <div className="flex flex-wrap gap-2">
-                {dateFilters.map((filter) => (
-                  <FilterButton
-                    active={dateFilter === filter.value}
-                    className={
-                      filter.value === "7d" || filter.value === "all"
-                        ? "hidden sm:inline-flex"
-                        : undefined
-                    }
-                    href={makeDashboardHref(searchParams, {
-                      date: filter.value,
-                    })}
-                    key={filter.value}
-                  >
-                    {filter.label}
-                  </FilterButton>
-                ))}
-                </div>
-
-                <div className="flex items-center gap-2 sm:hidden">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Timezone:
-                  </span>
-                  <FilterButton
-                    active={timezone === "America/New_York"}
-                    className={
-                      timezone === "America/New_York"
-                        ? "h-9 w-12 bg-muted text-foreground hover:bg-muted/80"
-                        : "h-9 w-12"
-                    }
-                    href={makeDashboardHref(searchParams, {
-                      timezone: "America/New_York",
-                    })}
-                  >
-                    <img
-                      alt="New York"
-                      className="h-5 w-5 rounded-full object-cover"
-                      src="/assets/flag-for-usa.png"
-                    />
-                  </FilterButton>
-                  <FilterButton
-                    active={timezone === "America/Lima"}
-                    className={
-                      timezone === "America/Lima"
-                        ? "h-9 w-12 bg-muted text-foreground hover:bg-muted/80"
-                        : "h-9 w-12"
-                    }
-                    href={makeDashboardHref(searchParams, {
-                      timezone: "America/Lima",
-                    })}
-                  >
-                    <img
-                      alt="Lima"
-                      className="h-5 w-5 rounded-full object-cover"
-                      src="/assets/flag-peru.png"
-                    />
-                  </FilterButton>
+                  {dateFilters.map((filter) => (
+                    <FilterButton
+                      active={dateFilter === filter.value}
+                      className={
+                        filter.value === "7d" || filter.value === "all"
+                          ? "hidden sm:inline-flex"
+                          : undefined
+                      }
+                      href={makeDashboardHref(searchParams, {
+                        date: filter.value,
+                      })}
+                      key={filter.value}
+                    >
+                      {filter.label}
+                    </FilterButton>
+                  ))}
+                  <SortIconButton
+                    active={sort === "desc"}
+                    direction="desc"
+                    href={makeDashboardHref(searchParams, { sort: "desc" })}
+                  />
+                  <SortIconButton
+                    active={sort === "asc"}
+                    direction="asc"
+                    href={makeDashboardHref(searchParams, { sort: "asc" })}
+                  />
                 </div>
               </div>
-
-              <div className="hidden items-center gap-2 sm:flex">
-                <FilterButton
-                  active={timezone === "America/New_York"}
-                  href={makeDashboardHref(searchParams, {
-                    timezone: "America/New_York",
-                  })}
-                >
-                  New York
-                </FilterButton>
-                <FilterButton
-                  active={timezone === "America/Lima"}
-                  href={makeDashboardHref(searchParams, {
-                    timezone: "America/Lima",
-                  })}
-                >
-                  Lima
-                </FilterButton>
-              </div>
-
-              <div className="hidden flex-wrap gap-2 sm:flex">
-                <FilterButton
-                  active={sort === "desc"}
-                  href={makeDashboardHref(searchParams, { sort: "desc" })}
-                >
-                  Nuevo primero
-                </FilterButton>
-                <FilterButton
-                  active={sort === "asc"}
-                  href={makeDashboardHref(searchParams, { sort: "asc" })}
-                >
-                  Viejo primero
-                </FilterButton>
+              <div className="ml-auto sm:hidden">
+                <TimezoneSwitcher
+                  searchParams={searchParams}
+                  timezone={timezone}
+                />
               </div>
             </div>
           </div>
@@ -322,6 +416,13 @@ async function DashboardContent({
             timezone={timezone}
           />
         )}
+        {!dataError ? (
+          <PaginationControls
+            currentPage={currentPage}
+            searchParams={searchParams}
+            totalCount={result.totalCount}
+          />
+        ) : null}
       </section>
     </>
   );
