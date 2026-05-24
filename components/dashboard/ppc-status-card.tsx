@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type PpcStatusCardProps = {
   initialStatus: "ON" | "OFF";
@@ -9,6 +9,10 @@ type PpcStatusCardProps = {
 export function PpcStatusCard({ initialStatus }: PpcStatusCardProps) {
   const [isOn, setIsOn] = useState(initialStatus === "ON");
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setIsOn(initialStatus === "ON");
+  }, [initialStatus]);
 
   const toggleStatus = async () => {
     const nextIsOn = !isOn;
