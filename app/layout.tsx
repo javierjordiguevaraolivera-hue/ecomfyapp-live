@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { PwaRegistration } from "@/components/pwa-registration";
@@ -48,6 +48,10 @@ export const metadata: Metadata = {
       type: "image/png",
     },
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
 };
 
 const geistSans = Geist({
