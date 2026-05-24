@@ -134,7 +134,7 @@ function TimezoneSwitcher({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
+      <span className="hidden text-sm font-medium text-muted-foreground xl:inline">
         Timezone:
       </span>
       <FilterButton
@@ -338,13 +338,13 @@ async function DashboardContent({
             src="/assets/Ecomfy-Lead-Logo.png"
           />
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex">
+            <div className="hidden xl:flex">
               <TimezoneSwitcher
                 searchParams={searchParams}
                 timezone={timezone}
               />
             </div>
-            <span className="hidden text-sm text-muted-foreground sm:inline">
+            <span className="hidden text-sm text-muted-foreground xl:inline">
               {session.email}
             </span>
             <RefreshButton />
@@ -373,14 +373,14 @@ async function DashboardContent({
           <LeadIdSearch />
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center justify-between gap-3 sm:block lg:flex">
+            <div className="flex items-center justify-between gap-3">
               <div className="flex flex-wrap gap-2">
                 {dateFilters.map((filter) => (
                   <FilterButton
                     active={dateFilter === filter.value}
                     className={
                       filter.value === "7d" || filter.value === "all"
-                        ? "hidden sm:inline-flex"
+                        ? "hidden xl:inline-flex"
                         : undefined
                     }
                     href={makeDashboardHref(searchParams, {
@@ -403,7 +403,7 @@ async function DashboardContent({
                 />
               </div>
             </div>
-            <div className="ml-auto sm:hidden">
+            <div className="ml-auto xl:hidden">
               <TimezoneSwitcher
                 searchParams={searchParams}
                 timezone={timezone}

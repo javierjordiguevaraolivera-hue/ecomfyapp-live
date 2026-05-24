@@ -87,10 +87,10 @@ function LeadIdCell({ leadId }: { leadId: string }) {
 
   return (
     <>
-      <code className="hidden max-w-[270px] overflow-x-auto whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-[11px] sm:block">
+      <code className="hidden max-w-[270px] overflow-x-auto whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-[11px] xl:block">
         {leadId}
       </code>
-      <code className="relative block max-w-[62px] overflow-hidden whitespace-nowrap rounded bg-muted px-1 py-0.5 text-[11px] sm:hidden">
+      <code className="relative block max-w-[62px] overflow-hidden whitespace-nowrap rounded bg-muted px-1 py-0.5 text-[11px] xl:hidden">
         {firstSegment}
         <span className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-muted to-transparent" />
       </code>
@@ -188,7 +188,7 @@ export function LeadsTable({
           <tr>
             <th className="px-3 py-2 font-medium">Lead ID</th>
             <th className="px-3 py-2 font-medium">Created</th>
-            <th className="hidden px-3 py-2 font-medium sm:table-cell">
+            <th className="hidden px-3 py-2 font-medium xl:table-cell">
               <FilterableHeader
                 activeValue={activeFilters.funnel_id}
                 filterKey="funnel_id"
@@ -204,7 +204,7 @@ export function LeadsTable({
                 options={filterOptions.lead_status}
               />
             </th>
-            <th className="hidden px-3 py-2 font-medium sm:table-cell">
+            <th className="hidden px-3 py-2 font-medium xl:table-cell">
               <FilterableHeader
                 activeValue={activeFilters.sold_as}
                 filterKey="sold_as"
@@ -212,7 +212,7 @@ export function LeadsTable({
                 options={filterOptions.sold_as}
               />
             </th>
-            <th className="hidden px-3 py-2 font-medium sm:table-cell">
+            <th className="hidden px-3 py-2 font-medium xl:table-cell">
               <FilterableHeader
                 activeValue={activeFilters.language}
                 filterKey="language"
@@ -228,7 +228,7 @@ export function LeadsTable({
                 options={filterOptions.source}
               />
             </th>
-            <th className="px-3 py-2 font-medium sm:hidden">
+            <th className="px-3 py-2 font-medium xl:hidden">
               <FilterableHeader
                 activeValue={activeFilters.sold_as}
                 filterKey="sold_as"
@@ -236,7 +236,7 @@ export function LeadsTable({
                 options={filterOptions.sold_as}
               />
             </th>
-            <th className="hidden px-3 py-2 font-medium sm:table-cell">
+            <th className="hidden px-3 py-2 font-medium xl:table-cell">
               <FilterableHeader
                 activeValue={activeFilters.domain}
                 filterKey="domain"
@@ -253,7 +253,7 @@ export function LeadsTable({
               />
             </th>
             <th className="px-3 py-2 font-medium">Printed numbers</th>
-            <th className="px-3 py-2 font-medium sm:hidden">
+            <th className="px-3 py-2 font-medium xl:hidden">
               <FilterableHeader
                 activeValue={activeFilters.language}
                 filterKey="language"
@@ -261,7 +261,7 @@ export function LeadsTable({
                 options={filterOptions.language}
               />
             </th>
-            <th className="px-3 py-2 font-medium sm:hidden">
+            <th className="px-3 py-2 font-medium xl:hidden">
               <FilterableHeader
                 activeValue={activeFilters.domain}
                 filterKey="domain"
@@ -269,7 +269,7 @@ export function LeadsTable({
                 options={filterOptions.domain}
               />
             </th>
-            <th className="px-3 py-2 font-medium sm:hidden">
+            <th className="px-3 py-2 font-medium xl:hidden">
               <FilterableHeader
                 activeValue={activeFilters.funnel_id}
                 filterKey="funnel_id"
@@ -292,12 +292,12 @@ export function LeadsTable({
           ) : null}
           {rows.map((row) => (
             <tr key={row.lead_id} className="align-top">
-              <td className="min-w-[104px] px-2 py-1.5 sm:min-w-[320px] sm:px-3">
-                <div className="flex items-center gap-1 sm:gap-2">
+              <td className="min-w-[104px] px-2 py-1.5 xl:min-w-[320px] xl:px-3">
+                <div className="flex items-center gap-1 xl:gap-2">
                   <LeadIdCell leadId={row.lead_id} />
                   <Button
                     aria-label="Copy lead ID"
-                    className="h-5 w-5 shrink-0 sm:h-6 sm:w-6"
+                    className="h-5 w-5 shrink-0 xl:h-6 xl:w-6"
                     onClick={() => copyValue(row.lead_id)}
                     size="icon"
                     type="button"
@@ -308,30 +308,30 @@ export function LeadsTable({
                 </div>
               </td>
               <td className="whitespace-nowrap px-3 py-1.5">
-                <span className="hidden sm:inline">
+                <span className="hidden xl:inline">
                   {formatDateInTimezone(row.created_at, timezone)}
                 </span>
-                <span className="sm:hidden">
+                <span className="xl:hidden">
                   {formatTimeInTimezone(row.created_at, timezone)}
                 </span>
               </td>
-              <td className="hidden px-3 py-1.5 sm:table-cell">
+              <td className="hidden px-3 py-1.5 xl:table-cell">
                 {row.funnel_id}
               </td>
               <td className="px-3 py-1.5">
                 <StatusBadge status={row.lead_status} />
               </td>
-              <td className="hidden px-3 py-1.5 sm:table-cell">
+              <td className="hidden px-3 py-1.5 xl:table-cell">
                 <SoldAsIcon value={row.sold_as} />
               </td>
-              <td className="hidden px-3 py-1.5 sm:table-cell">
+              <td className="hidden px-3 py-1.5 xl:table-cell">
                 {row.language ?? <EmptyValue />}
               </td>
               <td className="px-3 py-1.5">{row.source ?? <EmptyValue />}</td>
-              <td className="px-3 py-1.5 sm:hidden">
+              <td className="px-3 py-1.5 xl:hidden">
                 <SoldAsIcon value={row.sold_as} />
               </td>
-              <td className="hidden px-3 py-1.5 sm:table-cell">
+              <td className="hidden px-3 py-1.5 xl:table-cell">
                 {row.domain ?? <EmptyValue />}
               </td>
               <td className="px-3 py-1.5">{row.sub1 ?? <EmptyValue />}</td>
@@ -353,13 +353,13 @@ export function LeadsTable({
                   <EmptyValue />
                 )}
               </td>
-              <td className="px-3 py-1.5 sm:hidden">
+              <td className="px-3 py-1.5 xl:hidden">
                 {row.language ?? <EmptyValue />}
               </td>
-              <td className="px-3 py-1.5 sm:hidden">
+              <td className="px-3 py-1.5 xl:hidden">
                 {row.domain ?? <EmptyValue />}
               </td>
-              <td className="px-3 py-1.5 sm:hidden">{row.funnel_id}</td>
+              <td className="px-3 py-1.5 xl:hidden">{row.funnel_id}</td>
             </tr>
           ))}
         </tbody>

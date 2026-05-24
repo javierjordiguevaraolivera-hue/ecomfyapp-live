@@ -1,6 +1,6 @@
 {
-  "name": "EcomfyApp Live",
-  "short_name": "Ecomfy Live",
+  "name": "Ecomfylead App",
+  "short_name": "Ecomfylead",
   "description": "Internal lead dashboard",
   "id": "/dashboard",
   "start_url": "/dashboard",

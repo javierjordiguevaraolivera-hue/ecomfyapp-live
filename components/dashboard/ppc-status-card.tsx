@@ -40,7 +40,7 @@ export function PpcStatusCard({ initialStatus }: PpcStatusCardProps) {
   };
 
   return (
-    <div className="sm:min-w-[220px]">
+    <div className="xl:min-w-[220px]">
       <h2 className="font-bold">PPC Status</h2>
       <div className="mt-2 flex items-center gap-2">
         <span className="text-sm">Todos</span>

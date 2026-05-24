@@ -1,5 +1,5 @@
 {
-  "name": "ecomfyapp-live",
+  "name": "ecomfylead-app",
   "private": true,
   "scripts": {
     "dev": "next dev",

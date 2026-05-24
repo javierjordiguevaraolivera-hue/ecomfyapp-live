@@ -10,8 +10,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  applicationName: "EcomfyApp Live",
-  title: "EcomfyApp Live",
+  applicationName: "Ecomfylead App",
+  title: "Ecomfylead App",
   description: "Internal lead dashboard",
   manifest: "/manifest.webmanifest",
   robots: {
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     capable: true,
     startupImage: "/assets/ecomfy-lead-icon-512.png",
     statusBarStyle: "default",
-    title: "EcomfyApp Live",
+    title: "Ecomfylead App",
   },
   icons: {
     icon: [
@@ -71,8 +71,9 @@ export default function RootLayout({
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
+          forcedTheme="light"
           disableTransitionOnChange
         >
           <PwaRegistration />
