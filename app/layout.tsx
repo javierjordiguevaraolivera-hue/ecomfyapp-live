@@ -24,8 +24,28 @@ export const metadata: Metadata = {
     title: "EcomfyApp Live",
   },
   icons: {
-    icon: "/assets/ecomfy_lead_icon.jpg",
-    apple: "/assets/ecomfy_lead_icon.jpg",
+    icon: [
+      {
+        url: "/favicon.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/assets/ecomfy-lead-icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/assets/ecomfy-lead-icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+    apple: {
+      url: "/apple-touch-icon.png",
+      sizes: "180x180",
+      type: "image/png",
+    },
   },
 };
 

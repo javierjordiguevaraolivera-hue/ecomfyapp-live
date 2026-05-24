@@ -10,10 +10,22 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/assets/ecomfy_lead_icon.jpg",
-      "sizes": "160x160",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
+      "src": "/assets/ecomfy-lead-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/ecomfy-lead-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/ecomfy-lead-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
