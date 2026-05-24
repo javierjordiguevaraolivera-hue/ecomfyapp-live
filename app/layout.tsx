@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
+    startupImage: "/assets/ecomfy-lead-icon-512.png",
     statusBarStyle: "default",
     title: "EcomfyApp Live",
   },
@@ -61,7 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"

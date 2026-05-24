@@ -5,11 +5,24 @@ import {
 import { type NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+const publicPwaPaths = new Set([
+  "/manifest.webmanifest",
+  "/sw.js",
+  "/apple-touch-icon.png",
+  "/favicon.png",
+  "/favicon.ico",
+]);
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginRoute = pathname === "/auth/login";
   const isAuthApiRoute =
     pathname === "/api/auth/login" || pathname === "/api/auth/logout";
+
+  if (publicPwaPaths.has(pathname) || pathname.startsWith("/assets/")) {
+    return NextResponse.next();
+  }
+
   const session = await verifySessionToken(
     request.cookies.get(getSessionCookieName())?.value,
   );
@@ -35,10 +48,9 @@ export const config = {
      * Match all request paths except:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * - public PWA files
      * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
-     * Feel free to modify this pattern to include more paths.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|manifest.webmanifest|sw.js|favicon.ico|favicon.png|apple-touch-icon.png|assets/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

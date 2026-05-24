@@ -2,12 +2,15 @@
   "name": "EcomfyApp Live",
   "short_name": "Ecomfy Live",
   "description": "Internal lead dashboard",
+  "id": "/dashboard",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#111111",
   "orientation": "portrait",
+  "lang": "es",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "/assets/ecomfy-lead-icon-192.png",
@@ -25,7 +28,7 @@
       "src": "/assets/ecomfy-lead-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }
