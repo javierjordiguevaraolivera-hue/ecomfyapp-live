@@ -40,7 +40,7 @@ const filterKeys: LeadFilterKey[] = [
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function createLeadsClient() {
+export function createLeadsClient() {
   const url = process.env.LEADS_SUPABASE_URL;
   const serviceRoleKey = process.env.LEADS_SUPABASE_SERVICE_ROLE_KEY;
 

@@ -1,10 +1,12 @@
 import { LeadsTable } from "@/components/dashboard/leads-table";
 import { LeadIdSearch } from "@/components/dashboard/lead-id-search";
+import { PpcStatusCard } from "@/components/dashboard/ppc-status-card";
 import { RefreshButton } from "@/components/dashboard/refresh-button";
 import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth/session";
+import { getPpcStatus, type PpcStatus } from "@/lib/environment/variables";
 import {
   normalizeDateFilter,
   normalizeSortDirection,
@@ -278,10 +280,11 @@ async function DashboardContent({
   };
   let todayCount = 0;
   let yesterdayCount = 0;
+  let ppcStatus: PpcStatus = "OFF";
   let dataError: string | null = null;
 
   try {
-    const [rowsResult, optionsResult, todayTotal, yesterdayTotal] =
+    const [rowsResult, optionsResult, todayTotal, yesterdayTotal, ppcValue] =
       await Promise.all([
         getLeadDashboardRows({
           dateFilter,
@@ -304,12 +307,14 @@ async function DashboardContent({
           dateFilter: "yesterday",
           timezone,
         }),
+        getPpcStatus(),
       ]);
 
     result = rowsResult;
     filterOptions = optionsResult;
     todayCount = todayTotal;
     yesterdayCount = yesterdayTotal;
+    ppcStatus = ppcValue;
   } catch (error) {
     result = { rows: [], totalCount: 0 };
     dataError =
@@ -349,7 +354,7 @@ async function DashboardContent({
       </header>
 
       <section className="flex min-h-0 flex-1 flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4">
-        <div className="space-y-3 sm:space-y-4">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-3 sm:gap-4">
           <div className="space-y-1">
             <CardTitle className="text-xl">Leads</CardTitle>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
@@ -359,47 +364,50 @@ async function DashboardContent({
               </span>
             </div>
           </div>
+          <div className="justify-self-end">
+            <PpcStatusCard initialStatus={ppcStatus} />
+          </div>
+        </div>
 
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <LeadIdSearch />
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <LeadIdSearch />
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center justify-between gap-3 sm:block lg:flex">
-                <div className="flex flex-wrap gap-2">
-                  {dateFilters.map((filter) => (
-                    <FilterButton
-                      active={dateFilter === filter.value}
-                      className={
-                        filter.value === "7d" || filter.value === "all"
-                          ? "hidden sm:inline-flex"
-                          : undefined
-                      }
-                      href={makeDashboardHref(searchParams, {
-                        date: filter.value,
-                      })}
-                      key={filter.value}
-                    >
-                      {filter.label}
-                    </FilterButton>
-                  ))}
-                  <SortIconButton
-                    active={sort === "desc"}
-                    direction="desc"
-                    href={makeDashboardHref(searchParams, { sort: "desc" })}
-                  />
-                  <SortIconButton
-                    active={sort === "asc"}
-                    direction="asc"
-                    href={makeDashboardHref(searchParams, { sort: "asc" })}
-                  />
-                </div>
-              </div>
-              <div className="ml-auto sm:hidden">
-                <TimezoneSwitcher
-                  searchParams={searchParams}
-                  timezone={timezone}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center justify-between gap-3 sm:block lg:flex">
+              <div className="flex flex-wrap gap-2">
+                {dateFilters.map((filter) => (
+                  <FilterButton
+                    active={dateFilter === filter.value}
+                    className={
+                      filter.value === "7d" || filter.value === "all"
+                        ? "hidden sm:inline-flex"
+                        : undefined
+                    }
+                    href={makeDashboardHref(searchParams, {
+                      date: filter.value,
+                    })}
+                    key={filter.value}
+                  >
+                    {filter.label}
+                  </FilterButton>
+                ))}
+                <SortIconButton
+                  active={sort === "desc"}
+                  direction="desc"
+                  href={makeDashboardHref(searchParams, { sort: "desc" })}
+                />
+                <SortIconButton
+                  active={sort === "asc"}
+                  direction="asc"
+                  href={makeDashboardHref(searchParams, { sort: "asc" })}
                 />
               </div>
+            </div>
+            <div className="ml-auto sm:hidden">
+              <TimezoneSwitcher
+                searchParams={searchParams}
+                timezone={timezone}
+              />
             </div>
           </div>
         </div>
