@@ -41,7 +41,7 @@ export function LeadIdSearch() {
         <Input
           className="h-9 pl-8 pr-8"
           onChange={(event) => setValue(event.target.value)}
-          placeholder="Buscar por lead ID exacto"
+          placeholder="Buscar por lead ID"
           value={value}
         />
         {value ? (
