@@ -55,3 +55,17 @@ export async function sendReadyForSellPush(
 
   await webPush.sendNotification(subscription as PushSubscription, payload);
 }
+
+export async function sendTestPush(subscription: StoredPushSubscription) {
+  configureWebPush();
+
+  const payload = JSON.stringify({
+    title: "Notificaciones activadas",
+    body: "Este dispositivo ya puede recibir alertas de leads.",
+    icon: "/assets/ecomfy-lead-icon-192.png",
+    tag: "push-test",
+    url: "/dashboard",
+  });
+
+  await webPush.sendNotification(subscription as PushSubscription, payload);
+}

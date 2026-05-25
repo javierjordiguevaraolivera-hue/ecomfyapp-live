@@ -149,6 +149,33 @@ export function ReadyForSellNotifier() {
     return () => window.clearTimeout(reminderId);
   }, [isEnabled, permission, showPrompt]);
 
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const playCashRegisterOnPush = (event: MessageEvent) => {
+      if (event.data?.type !== "ready-for-sell-push") {
+        return;
+      }
+
+      try {
+        playNotificationTone("cash-register");
+      } catch {
+        // Browsers may still block custom audio if the page is not active.
+      }
+    };
+
+    navigator.serviceWorker.addEventListener("message", playCashRegisterOnPush);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener(
+        "message",
+        playCashRegisterOnPush,
+      );
+    };
+  }, []);
+
   const enableNotifications = async () => {
     if (!isNotificationSupported()) {
       setPermission("unsupported");
