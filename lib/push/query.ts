@@ -4,7 +4,12 @@ import type {
   StoredPushSubscription,
 } from "@/lib/push/web-push";
 
+const PUSH_SCHEMA = "push_notificaciones_ecomfyapp";
 const PUSH_CRON_STATE_KEY = "ready_for_sell_push_seeded";
+
+function createPushClient() {
+  return createLeadsClient().schema(PUSH_SCHEMA);
+}
 
 export async function upsertPushSubscription({
   subscription,
@@ -13,7 +18,7 @@ export async function upsertPushSubscription({
   subscription: StoredPushSubscription;
   userAgent: string | null;
 }) {
-  const supabase = createLeadsClient();
+  const supabase = createPushClient();
   const { error } = await supabase.from("push_subscriptions").upsert(
     {
       endpoint: subscription.endpoint,
@@ -30,7 +35,7 @@ export async function upsertPushSubscription({
 }
 
 export async function deletePushSubscription(endpoint: string) {
-  const supabase = createLeadsClient();
+  const supabase = createPushClient();
   const { error } = await supabase
     .from("push_subscriptions")
     .delete()
@@ -42,7 +47,7 @@ export async function deletePushSubscription(endpoint: string) {
 }
 
 export async function getPushSubscriptions() {
-  const supabase = createLeadsClient();
+  const supabase = createPushClient();
   const { data, error } = await supabase
     .from("push_subscriptions")
     .select("endpoint,subscription");
@@ -58,8 +63,9 @@ export async function getPushSubscriptions() {
 }
 
 export async function getUnsentReadyForSellLeads() {
-  const supabase = createLeadsClient();
-  const { data: leads, error: leadsError } = await supabase
+  const leadsSupabase = createLeadsClient();
+  const pushSupabase = createPushClient();
+  const { data: leads, error: leadsError } = await leadsSupabase
     .from("leads")
     .select("lead_id,created_at,source,domain,sub1")
     .eq("lead_status", "ready_for_sell")
@@ -77,7 +83,7 @@ export async function getUnsentReadyForSellLeads() {
   }
 
   const leadIds = typedLeads.map((lead) => lead.lead_id);
-  const { data: sentRows, error: sentError } = await supabase
+  const { data: sentRows, error: sentError } = await pushSupabase
     .from("push_notification_deliveries")
     .select("lead_id")
     .in("lead_id", leadIds);
@@ -98,7 +104,7 @@ export async function markReadyForSellLeadsSent(leadIds: string[]) {
     return;
   }
 
-  const supabase = createLeadsClient();
+  const supabase = createPushClient();
   const { error } = await supabase.from("push_notification_deliveries").upsert(
     leadIds.map((leadId) => ({
       lead_id: leadId,
@@ -113,7 +119,7 @@ export async function markReadyForSellLeadsSent(leadIds: string[]) {
 }
 
 export async function hasSeededReadyForSellPush() {
-  const supabase = createLeadsClient();
+  const supabase = createPushClient();
   const { data, error } = await supabase
     .from("push_cron_state")
     .select("value")
@@ -128,7 +134,7 @@ export async function hasSeededReadyForSellPush() {
 }
 
 export async function markReadyForSellPushSeeded() {
-  const supabase = createLeadsClient();
+  const supabase = createPushClient();
   const { error } = await supabase.from("push_cron_state").upsert(
     {
       key: PUSH_CRON_STATE_KEY,
