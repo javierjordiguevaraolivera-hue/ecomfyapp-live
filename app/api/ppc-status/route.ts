@@ -1,6 +1,7 @@
 import {
   getPpcStatus,
   updatePpcStatus,
+  type PpcStatusLanguage,
   type PpcStatus,
 } from "@/lib/environment/variables";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth/session";
@@ -20,12 +21,18 @@ async function requireSession() {
   return true;
 }
 
-export async function GET() {
+function normalizeLanguage(value?: string): PpcStatusLanguage {
+  return value === "english" ? "english" : "spanish";
+}
+
+export async function GET(request: Request) {
   if (!(await requireSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const status = await getPpcStatus();
+  const url = new URL(request.url);
+  const language = normalizeLanguage(url.searchParams.get("language") ?? "");
+  const status = await getPpcStatus(language);
 
   return NextResponse.json({ status });
 }
@@ -35,7 +42,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { status } = (await request.json()) as { status?: PpcStatus };
+  const { status, language } = (await request.json()) as {
+    status?: PpcStatus;
+    language?: string;
+  };
 
   if (status !== "ON" && status !== "OFF") {
     return NextResponse.json(
@@ -44,7 +54,10 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const updatedStatus = await updatePpcStatus(status);
+  const updatedStatus = await updatePpcStatus(
+    status,
+    normalizeLanguage(language),
+  );
 
   return NextResponse.json({ status: updatedStatus });
 }

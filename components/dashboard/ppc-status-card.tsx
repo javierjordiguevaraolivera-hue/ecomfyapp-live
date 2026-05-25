@@ -3,10 +3,21 @@
 import { useEffect, useState } from "react";
 
 type PpcStatusCardProps = {
-  initialStatus: "ON" | "OFF";
+  initialEnglishStatus: "ON" | "OFF";
+  initialSpanishStatus: "ON" | "OFF";
 };
 
-export function PpcStatusCard({ initialStatus }: PpcStatusCardProps) {
+type PpcStatusToggleProps = {
+  initialStatus: "ON" | "OFF";
+  label: string;
+  language: "spanish" | "english";
+};
+
+function PpcStatusToggle({
+  initialStatus,
+  label,
+  language,
+}: PpcStatusToggleProps) {
   const [isOn, setIsOn] = useState(initialStatus === "ON");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -27,7 +38,10 @@ export function PpcStatusCard({ initialStatus }: PpcStatusCardProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status: nextIsOn ? "ON" : "OFF" }),
+        body: JSON.stringify({
+          language,
+          status: nextIsOn ? "ON" : "OFF",
+        }),
       });
 
       if (!response.ok) {
@@ -44,25 +58,46 @@ export function PpcStatusCard({ initialStatus }: PpcStatusCardProps) {
   };
 
   return (
+    <div className="flex items-center gap-2">
+      <span className="min-w-14 text-sm">{label}</span>
+      <button
+        aria-label={`Cambiar PPC ${label}`}
+        aria-pressed={isOn}
+        disabled={isSaving}
+        className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
+          isOn ? "bg-emerald-600" : "bg-muted-foreground/30"
+        } disabled:opacity-60`}
+        onClick={toggleStatus}
+        type="button"
+      >
+        <span
+          className={`inline-flex h-4 w-4 rounded-full bg-white shadow transition-transform ${
+            isOn ? "translate-x-5" : "translate-x-0.5"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
+export function PpcStatusCard({
+  initialEnglishStatus,
+  initialSpanishStatus,
+}: PpcStatusCardProps) {
+  return (
     <div className="xl:min-w-[220px]">
       <h2 className="font-bold">PPC Status</h2>
-      <div className="mt-2 flex items-center gap-2">
-        <span className="text-sm">Todos</span>
-        <button
-          aria-pressed={isOn}
-          disabled={isSaving}
-          className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
-            isOn ? "bg-emerald-600" : "bg-muted-foreground/30"
-          } disabled:opacity-60`}
-          onClick={toggleStatus}
-          type="button"
-        >
-          <span
-            className={`inline-flex h-4 w-4 rounded-full bg-white shadow transition-transform ${
-              isOn ? "translate-x-5" : "translate-x-0.5"
-            }`}
-          />
-        </button>
+      <div className="mt-2 space-y-2">
+        <PpcStatusToggle
+          initialStatus={initialSpanishStatus}
+          label="Español"
+          language="spanish"
+        />
+        <PpcStatusToggle
+          initialStatus={initialEnglishStatus}
+          label="Inglés"
+          language="english"
+        />
       </div>
     </div>
   );

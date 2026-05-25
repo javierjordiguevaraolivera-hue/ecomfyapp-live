@@ -281,12 +281,19 @@ async function DashboardContent({
   };
   let todayCount = 0;
   let yesterdayCount = 0;
-  let ppcStatus: PpcStatus = "OFF";
+  let ppcEnglishStatus: PpcStatus = "OFF";
+  let ppcSpanishStatus: PpcStatus = "OFF";
   let dataError: string | null = null;
 
   try {
-    const [rowsResult, optionsResult, todayTotal, yesterdayTotal, ppcValue] =
-      await Promise.all([
+    const [
+      rowsResult,
+      optionsResult,
+      todayTotal,
+      yesterdayTotal,
+      ppcSpanishValue,
+      ppcEnglishValue,
+    ] = await Promise.all([
         getLeadDashboardRows({
           dateFilter,
           timezone,
@@ -308,14 +315,16 @@ async function DashboardContent({
           dateFilter: "yesterday",
           timezone,
         }),
-        getPpcStatus(),
+        getPpcStatus("spanish"),
+        getPpcStatus("english"),
       ]);
 
     result = rowsResult;
     filterOptions = optionsResult;
     todayCount = todayTotal;
     yesterdayCount = yesterdayTotal;
-    ppcStatus = ppcValue;
+    ppcSpanishStatus = ppcSpanishValue;
+    ppcEnglishStatus = ppcEnglishValue;
   } catch (error) {
     result = { rows: [], totalCount: 0 };
     dataError =
@@ -367,7 +376,10 @@ async function DashboardContent({
             </div>
           </div>
           <div className="justify-self-end">
-            <PpcStatusCard initialStatus={ppcStatus} />
+            <PpcStatusCard
+              initialEnglishStatus={ppcEnglishStatus}
+              initialSpanishStatus={ppcSpanishStatus}
+            />
           </div>
         </div>
 
