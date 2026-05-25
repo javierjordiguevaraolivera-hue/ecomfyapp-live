@@ -83,7 +83,8 @@ export function ReadyForSellNotifier() {
   );
   const [isEnabled, setIsEnabled] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
-  const lastCheckedRef = useRef(new Date().toISOString());
+  const seenLeadIdsRef = useRef(new Set<string>());
+  const hasPrimedSeenLeadsRef = useRef(false);
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -126,8 +127,26 @@ export function ReadyForSellNotifier() {
   }, [isEnabled, permission, showPrompt]);
 
   useEffect(() => {
-    const markCurrentLeadsAsSeen = () => {
-      lastCheckedRef.current = new Date().toISOString();
+    const markCurrentLeadsAsSeen = async () => {
+      try {
+        const response = await fetch("/api/ready-for-sell", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as {
+          leads: ReadyForSellLead[];
+        };
+
+        data.leads.forEach((lead) => {
+          seenLeadIdsRef.current.add(lead.lead_id);
+        });
+      } catch {
+        // Manual refresh should continue even if this sync fails.
+      }
     };
 
     window.addEventListener(READY_FOR_SELL_SEEN_EVENT, markCurrentLeadsAsSeen);
@@ -145,14 +164,11 @@ export function ReadyForSellNotifier() {
       return;
     }
 
-    const checkLeads = async () => {
-      const since = lastCheckedRef.current;
-
+    const checkLeads = async ({ notify }: { notify: boolean }) => {
       try {
-        const response = await fetch(
-          `/api/ready-for-sell?since=${encodeURIComponent(since)}`,
-          { cache: "no-store" },
-        );
+        const response = await fetch("/api/ready-for-sell", {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
           return;
@@ -160,12 +176,25 @@ export function ReadyForSellNotifier() {
 
         const data = (await response.json()) as {
           leads: ReadyForSellLead[];
-          checkedAt: string;
         };
 
-        lastCheckedRef.current = data.checkedAt;
+        if (!hasPrimedSeenLeadsRef.current || !notify) {
+          data.leads.forEach((lead) => {
+            seenLeadIdsRef.current.add(lead.lead_id);
+          });
+          hasPrimedSeenLeadsRef.current = true;
+          return;
+        }
 
-        if (data.leads.length === 0) {
+        const newLeads = data.leads.filter(
+          (lead) => !seenLeadIdsRef.current.has(lead.lead_id),
+        );
+
+        data.leads.forEach((lead) => {
+          seenLeadIdsRef.current.add(lead.lead_id);
+        });
+
+        if (newLeads.length === 0) {
           return;
         }
 
@@ -177,7 +206,7 @@ export function ReadyForSellNotifier() {
           // The native notification still appears if custom sound is blocked.
         }
 
-        data.leads.forEach((lead) => {
+        newLeads.forEach((lead) => {
           const label = getLeadLabel(lead);
 
           registration.showNotification("Lead listo para vender", {
@@ -194,8 +223,10 @@ export function ReadyForSellNotifier() {
       }
     };
 
-    checkLeads();
-    intervalRef.current = window.setInterval(checkLeads, POLL_MS);
+    checkLeads({ notify: false });
+    intervalRef.current = window.setInterval(() => {
+      checkLeads({ notify: true });
+    }, POLL_MS);
 
     return () => {
       if (intervalRef.current) {
@@ -214,7 +245,7 @@ export function ReadyForSellNotifier() {
     setPermission(nextPermission);
     setIsEnabled(nextPermission === "granted");
     setShowPrompt(false);
-    lastCheckedRef.current = new Date().toISOString();
+    hasPrimedSeenLeadsRef.current = false;
 
     try {
       playNotificationTone();
