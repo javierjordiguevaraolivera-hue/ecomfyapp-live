@@ -1,5 +1,5 @@
 const SESSION_COOKIE_NAME = "metricas_session";
-const SESSION_DURATION_SECONDS = 60 * 60 * 12;
+const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 15;
 
 type SessionPayload = {
   email: string;

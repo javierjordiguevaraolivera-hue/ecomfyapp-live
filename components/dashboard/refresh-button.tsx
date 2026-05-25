@@ -5,7 +5,7 @@ import { RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-const AUTO_REFRESH_MS = 2 * 60 * 1000;
+const AUTO_REFRESH_MS = 60 * 1000;
 const READY_FOR_SELL_SEEN_EVENT = "ready-for-sell-seen";
 
 export function RefreshButton() {
