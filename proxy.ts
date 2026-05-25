@@ -18,8 +18,17 @@ export async function proxy(request: NextRequest) {
   const isLoginRoute = pathname === "/auth/login";
   const isAuthApiRoute =
     pathname === "/api/auth/login" || pathname === "/api/auth/logout";
+  const isAuthorizedPushCron =
+    pathname === "/api/push/ready-for-sell" &&
+    Boolean(process.env.CRON_SECRET) &&
+    request.headers.get("authorization") ===
+      `Bearer ${process.env.CRON_SECRET}`;
 
   if (publicPwaPaths.has(pathname) || pathname.startsWith("/assets/")) {
+    return NextResponse.next();
+  }
+
+  if (isAuthorizedPushCron) {
     return NextResponse.next();
   }
 

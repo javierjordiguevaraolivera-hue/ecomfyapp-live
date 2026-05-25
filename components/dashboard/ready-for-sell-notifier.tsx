@@ -20,6 +20,7 @@ type AudioWindow = Window &
 const POLL_MS = 30 * 1000;
 const PROMPT_REMINDER_MS = 15 * 60 * 1000;
 const READY_FOR_SELL_SEEN_EVENT = "ready-for-sell-seen";
+const PUBLIC_VAPID_KEY = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
 
 function isNotificationSupported() {
   return "Notification" in window && "serviceWorker" in navigator;
@@ -27,6 +28,19 @@ function isNotificationSupported() {
 
 function getLeadLabel(lead: ReadyForSellLead) {
   return [lead.source, lead.domain, lead.sub1].filter(Boolean).join(" | ");
+}
+
+function urlBase64ToUint8Array(value: string) {
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const base64 = `${value}${padding}`.replaceAll("-", "+").replaceAll("_", "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let index = 0; index < rawData.length; index += 1) {
+    outputArray[index] = rawData.charCodeAt(index);
+  }
+
+  return outputArray;
 }
 
 function playNotificationTone(kind: "prompt" | "cash-register" = "prompt") {
@@ -83,9 +97,9 @@ export function ReadyForSellNotifier() {
   );
   const [isEnabled, setIsEnabled] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
-  const seenLeadIdsRef = useRef(new Set<string>());
-  const hasPrimedSeenLeadsRef = useRef(false);
-  const intervalRef = useRef<number | null>(null);
+  const [subscriptionEndpoint, setSubscriptionEndpoint] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!isNotificationSupported()) {
@@ -94,8 +108,17 @@ export function ReadyForSellNotifier() {
     }
 
     setPermission(Notification.permission);
-    setIsEnabled(Notification.permission === "granted");
     setShowPrompt(Notification.permission === "default");
+
+    navigator.serviceWorker.ready
+      .then((registration) => registration.pushManager.getSubscription())
+      .then((subscription) => {
+        setIsEnabled(Boolean(subscription));
+        setSubscriptionEndpoint(subscription?.endpoint ?? null);
+      })
+      .catch(() => {
+        setIsEnabled(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -126,126 +149,49 @@ export function ReadyForSellNotifier() {
     return () => window.clearTimeout(reminderId);
   }, [isEnabled, permission, showPrompt]);
 
-  useEffect(() => {
-    const markCurrentLeadsAsSeen = async () => {
-      try {
-        const response = await fetch("/api/ready-for-sell", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          return;
-        }
-
-        const data = (await response.json()) as {
-          leads: ReadyForSellLead[];
-        };
-
-        data.leads.forEach((lead) => {
-          seenLeadIdsRef.current.add(lead.lead_id);
-        });
-      } catch {
-        // Manual refresh should continue even if this sync fails.
-      }
-    };
-
-    window.addEventListener(READY_FOR_SELL_SEEN_EVENT, markCurrentLeadsAsSeen);
-
-    return () => {
-      window.removeEventListener(
-        READY_FOR_SELL_SEEN_EVENT,
-        markCurrentLeadsAsSeen,
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isEnabled || permission !== "granted") {
-      return;
-    }
-
-    const checkLeads = async ({ notify }: { notify: boolean }) => {
-      try {
-        const response = await fetch("/api/ready-for-sell", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          return;
-        }
-
-        const data = (await response.json()) as {
-          leads: ReadyForSellLead[];
-        };
-
-        if (!hasPrimedSeenLeadsRef.current || !notify) {
-          data.leads.forEach((lead) => {
-            seenLeadIdsRef.current.add(lead.lead_id);
-          });
-          hasPrimedSeenLeadsRef.current = true;
-          return;
-        }
-
-        const newLeads = data.leads.filter(
-          (lead) => !seenLeadIdsRef.current.has(lead.lead_id),
-        );
-
-        data.leads.forEach((lead) => {
-          seenLeadIdsRef.current.add(lead.lead_id);
-        });
-
-        if (newLeads.length === 0) {
-          return;
-        }
-
-        const registration = await navigator.serviceWorker.ready;
-
-        try {
-          playNotificationTone("cash-register");
-        } catch {
-          // The native notification still appears if custom sound is blocked.
-        }
-
-        newLeads.forEach((lead) => {
-          const label = getLeadLabel(lead);
-
-          registration.showNotification("Lead listo para vender", {
-            body: label || lead.lead_id,
-            data: {
-              url: `/dashboard?lead_id=${encodeURIComponent(lead.lead_id)}`,
-            },
-            icon: "/assets/ecomfy-lead-icon-192.png",
-            tag: `ready-for-sell-${lead.lead_id}`,
-          });
-        });
-      } catch {
-        // Notifications are helpful, but the dashboard should never break.
-      }
-    };
-
-    checkLeads({ notify: false });
-    intervalRef.current = window.setInterval(() => {
-      checkLeads({ notify: true });
-    }, POLL_MS);
-
-    return () => {
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current);
-      }
-    };
-  }, [isEnabled, permission]);
-
   const enableNotifications = async () => {
     if (!isNotificationSupported()) {
       setPermission("unsupported");
       return;
     }
 
+    if (!PUBLIC_VAPID_KEY) {
+      return;
+    }
+
     const nextPermission = await Notification.requestPermission();
     setPermission(nextPermission);
-    setIsEnabled(nextPermission === "granted");
     setShowPrompt(false);
-    hasPrimedSeenLeadsRef.current = false;
+
+    if (nextPermission !== "granted") {
+      setIsEnabled(false);
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    const existingSubscription =
+      await registration.pushManager.getSubscription();
+    const subscription =
+      existingSubscription ??
+      (await registration.pushManager.subscribe({
+        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+        userVisibleOnly: true,
+      }));
+
+    const response = await fetch("/api/push/subscribe", {
+      body: JSON.stringify({ subscription: subscription.toJSON() }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not save push subscription.");
+    }
+
+    setIsEnabled(true);
+    setSubscriptionEndpoint(subscription.endpoint);
 
     try {
       playNotificationTone();
@@ -254,7 +200,30 @@ export function ReadyForSellNotifier() {
     }
   };
 
-  const disableNotifications = () => {
+  const disableNotifications = async () => {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+
+    if (subscription) {
+      await fetch("/api/push/subscribe", {
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "DELETE",
+      }).catch(() => {});
+      await subscription.unsubscribe();
+    } else if (subscriptionEndpoint) {
+      await fetch("/api/push/subscribe", {
+        body: JSON.stringify({ endpoint: subscriptionEndpoint }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "DELETE",
+      }).catch(() => {});
+    }
+
+    setSubscriptionEndpoint(null);
     setIsEnabled(false);
   };
 

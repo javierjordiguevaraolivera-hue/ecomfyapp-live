@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/push/ready-for-sell",
+      "schedule": "* * * * *"
+    }
+  ]
+}
