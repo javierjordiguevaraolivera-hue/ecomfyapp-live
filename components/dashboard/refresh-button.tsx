@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const AUTO_REFRESH_MS = 2 * 60 * 1000;
+const READY_FOR_SELL_SEEN_EVENT = "ready-for-sell-seen";
 
 export function RefreshButton() {
   const router = useRouter();
@@ -25,7 +26,11 @@ export function RefreshButton() {
     }, AUTO_REFRESH_MS);
   };
 
-  const refresh = () => {
+  const refresh = ({ markReadyForSellSeen = false } = {}) => {
+    if (markReadyForSellSeen) {
+      window.dispatchEvent(new Event(READY_FOR_SELL_SEEN_EVENT));
+    }
+
     setIsRefreshing(true);
     router.refresh();
     window.setTimeout(() => setIsRefreshing(false), 700);
@@ -41,7 +46,7 @@ export function RefreshButton() {
   return (
     <Button
       aria-label="Refresh data"
-      onClick={refresh}
+      onClick={() => refresh({ markReadyForSellSeen: true })}
       size="icon"
       type="button"
       variant="outline"

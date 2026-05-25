@@ -214,3 +214,22 @@ export async function getLeadCountByDateFilter({
 
   return count ?? 0;
 }
+
+export async function getReadyForSellLeadsSince(sinceIso: string) {
+  const supabase = createLeadsClient();
+  const { data, error } = await supabase
+    .from("leads")
+    .select("lead_id,created_at,source,domain,sub1")
+    .eq("lead_status", "ready_for_sell")
+    .gt("created_at", sinceIso)
+    .order("created_at", { ascending: true })
+    .limit(20);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as Array<
+    Pick<LeadDashboardRow, "lead_id" | "created_at" | "source" | "domain" | "sub1">
+  >;
+}

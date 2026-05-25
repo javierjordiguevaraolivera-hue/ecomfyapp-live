@@ -9,3 +9,26 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   event.respondWith(fetch(event.request));
 });
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const targetUrl = event.notification.data?.url || "/dashboard";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ includeUncontrolled: true, type: "window" })
+      .then((clients) => {
+        const existingClient = clients.find((client) =>
+          client.url.includes("/dashboard"),
+        );
+
+        if (existingClient) {
+          existingClient.focus();
+          return existingClient.navigate(targetUrl);
+        }
+
+        return self.clients.openWindow(targetUrl);
+      }),
+  );
+});

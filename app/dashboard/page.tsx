@@ -1,6 +1,7 @@
 import { LeadsTable } from "@/components/dashboard/leads-table";
 import { LeadIdSearch } from "@/components/dashboard/lead-id-search";
 import { PpcStatusCard } from "@/components/dashboard/ppc-status-card";
+import { ReadyForSellNotifier } from "@/components/dashboard/ready-for-sell-notifier";
 import { RefreshButton } from "@/components/dashboard/refresh-button";
 import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
@@ -347,6 +348,7 @@ async function DashboardContent({
             <span className="hidden text-sm text-muted-foreground xl:inline">
               {session.email}
             </span>
+            <ReadyForSellNotifier />
             <RefreshButton />
             <LogoutButton />
           </div>
@@ -421,6 +423,7 @@ async function DashboardContent({
             activeFilters={activeFilters}
             filterOptions={filterOptions}
             rows={result.rows}
+            totalCount={result.totalCount}
             timezone={timezone}
           />
         )}

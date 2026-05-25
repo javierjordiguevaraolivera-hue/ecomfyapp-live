@@ -28,6 +28,7 @@ import { useState } from "react";
 
 type LeadsTableProps = {
   rows: LeadDashboardRow[];
+  totalCount: number;
   timezone: DashboardTimezone;
   filterOptions: LeadFilterOptions;
   activeFilters: LeadFilters;
@@ -103,11 +104,13 @@ function FilterableHeader({
   filterKey,
   options,
   activeValue,
+  filteredCount,
 }: {
   label: string;
   filterKey: LeadFilterKey;
   options: string[];
   activeValue?: string;
+  filteredCount: number;
 }) {
   const searchParams = useSearchParams();
 
@@ -163,12 +166,18 @@ function FilterableHeader({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      {activeValue ? (
+        <span className="text-[11px] font-medium text-foreground">
+          ({filteredCount})
+        </span>
+      ) : null}
     </div>
   );
 }
 
 export function LeadsTable({
   rows,
+  totalCount,
   timezone,
   filterOptions,
   activeFilters,
@@ -192,6 +201,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.funnel_id}
                 filterKey="funnel_id"
+                filteredCount={totalCount}
                 label={filterLabels.funnel_id}
                 options={filterOptions.funnel_id}
               />
@@ -200,6 +210,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.lead_status}
                 filterKey="lead_status"
+                filteredCount={totalCount}
                 label={filterLabels.lead_status}
                 options={filterOptions.lead_status}
               />
@@ -208,6 +219,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.sold_as}
                 filterKey="sold_as"
+                filteredCount={totalCount}
                 label={filterLabels.sold_as}
                 options={filterOptions.sold_as}
               />
@@ -216,6 +228,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.language}
                 filterKey="language"
+                filteredCount={totalCount}
                 label={filterLabels.language}
                 options={filterOptions.language}
               />
@@ -224,6 +237,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.source}
                 filterKey="source"
+                filteredCount={totalCount}
                 label={filterLabels.source}
                 options={filterOptions.source}
               />
@@ -232,6 +246,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.sold_as}
                 filterKey="sold_as"
+                filteredCount={totalCount}
                 label={filterLabels.sold_as}
                 options={filterOptions.sold_as}
               />
@@ -240,6 +255,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.domain}
                 filterKey="domain"
+                filteredCount={totalCount}
                 label={filterLabels.domain}
                 options={filterOptions.domain}
               />
@@ -248,6 +264,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.sub1}
                 filterKey="sub1"
+                filteredCount={totalCount}
                 label={filterLabels.sub1}
                 options={filterOptions.sub1}
               />
@@ -257,6 +274,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.language}
                 filterKey="language"
+                filteredCount={totalCount}
                 label={filterLabels.language}
                 options={filterOptions.language}
               />
@@ -265,6 +283,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.domain}
                 filterKey="domain"
+                filteredCount={totalCount}
                 label={filterLabels.domain}
                 options={filterOptions.domain}
               />
@@ -273,6 +292,7 @@ export function LeadsTable({
               <FilterableHeader
                 activeValue={activeFilters.funnel_id}
                 filterKey="funnel_id"
+                filteredCount={totalCount}
                 label={filterLabels.funnel_id}
                 options={filterOptions.funnel_id}
               />

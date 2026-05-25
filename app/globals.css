@@ -71,3 +71,29 @@
     min-height: 100svh;
   }
 }
+
+@layer utilities {
+  @keyframes bell-shake {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    20% {
+      transform: rotate(-45deg);
+    }
+    40% {
+      transform: rotate(45deg);
+    }
+    60% {
+      transform: rotate(-25deg);
+    }
+    80% {
+      transform: rotate(25deg);
+    }
+  }
+
+  .animate-bell-shake {
+    animation: bell-shake 1.4s ease-in-out infinite;
+    transform-origin: 50% 0%;
+  }
+}
