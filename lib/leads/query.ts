@@ -85,7 +85,9 @@ export async function getLeadDashboardRows({
   filterKeys.forEach((key) => {
     const value = filters[key];
 
-    if (value) {
+    if (Array.isArray(value) && value.length > 0) {
+      query = query.in(key, value);
+    } else if (typeof value === "string" && value) {
       query = query.eq(key, value);
     }
   });

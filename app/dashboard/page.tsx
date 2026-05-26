@@ -57,6 +57,16 @@ function getSearchValue(searchParams: SearchParams, key: string) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function getSearchValues(searchParams: SearchParams, key: string) {
+  const value = searchParams[key];
+
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+
+  return value ? [value] : [];
+}
+
 function makeDashboardHref(
   searchParams: SearchParams,
   nextValues: Record<string, string>,
@@ -64,14 +74,17 @@ function makeDashboardHref(
   const params = new URLSearchParams();
 
   Object.entries(searchParams).forEach(([key, value]) => {
-    const cleanValue = Array.isArray(value) ? value[0] : value;
+    const cleanValues = Array.isArray(value) ? value : [value];
 
-    if (cleanValue) {
-      params.set(key, cleanValue);
-    }
+    cleanValues.forEach((cleanValue) => {
+      if (cleanValue) {
+        params.append(key, cleanValue);
+      }
+    });
   });
 
   Object.entries(nextValues).forEach(([key, value]) => {
+    params.delete(key);
     params.set(key, value);
   });
 
@@ -84,6 +97,16 @@ function makeDashboardHref(
 
 function getActiveFilters(searchParams: SearchParams) {
   return filterKeys.reduce((filters, key) => {
+    if (key === "domain") {
+      const values = getSearchValues(searchParams, key);
+
+      if (values.length > 0) {
+        filters[key] = values;
+      }
+
+      return filters;
+    }
+
     const value = getSearchValue(searchParams, key);
 
     if (value) {

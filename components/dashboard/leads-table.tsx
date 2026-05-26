@@ -109,18 +109,37 @@ function FilterableHeader({
   label: string;
   filterKey: LeadFilterKey;
   options: string[];
-  activeValue?: string;
+  activeValue?: string | string[];
   filteredCount: number;
 }) {
   const searchParams = useSearchParams();
+  const activeValues = Array.isArray(activeValue)
+    ? activeValue
+    : activeValue
+      ? [activeValue]
+      : [];
+  const isMultiSelect = filterKey === "domain";
 
   const makeHref = (value?: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (value) {
-      params.set(filterKey, value);
-    } else {
+    if (!value) {
       params.delete(filterKey);
+    } else if (isMultiSelect) {
+      const nextValues = new Set(params.getAll(filterKey));
+
+      if (nextValues.has(value)) {
+        nextValues.delete(value);
+      } else {
+        nextValues.add(value);
+      }
+
+      params.delete(filterKey);
+      nextValues.forEach((nextValue) => {
+        params.append(filterKey, nextValue);
+      });
+    } else {
+      params.set(filterKey, value);
     }
 
     params.delete("page");
@@ -140,7 +159,7 @@ function FilterableHeader({
             variant="ghost"
           >
             <Funnel
-              className={activeValue ? "fill-current text-foreground" : ""}
+              className={activeValues.length > 0 ? "fill-current text-foreground" : ""}
             />
           </Button>
         </DropdownMenuTrigger>
@@ -158,7 +177,7 @@ function FilterableHeader({
             options.map((option) => (
               <DropdownMenuItem asChild key={option}>
                 <Link href={makeHref(option)}>
-                  {activeValue === option ? <Check /> : null}
+                  {activeValues.includes(option) ? <Check /> : null}
                   <span className="truncate">{option}</span>
                 </Link>
               </DropdownMenuItem>
@@ -166,7 +185,7 @@ function FilterableHeader({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-      {activeValue ? (
+      {activeValues.length > 0 ? (
         <span className="text-[11px] font-medium text-foreground">
           ({filteredCount})
         </span>

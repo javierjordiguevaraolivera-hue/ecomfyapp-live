@@ -26,6 +26,6 @@ export type LeadFilterKey =
   | "domain"
   | "sub1";
 
-export type LeadFilters = Partial<Record<LeadFilterKey, string>>;
+export type LeadFilters = Partial<Record<LeadFilterKey, string | string[]>>;
 
 export type LeadFilterOptions = Record<LeadFilterKey, string[]>;
