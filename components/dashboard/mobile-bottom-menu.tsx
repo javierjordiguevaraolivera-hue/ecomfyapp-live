@@ -4,48 +4,34 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CreditCard, Home, Plus, UserRound, UsersRound } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const menuItems = [
   {
     href: "/dashboard",
     icon: Home,
     label: "Dashboard",
-    view: "dashboard",
   },
   {
-    href: "/dashboard",
+    href: "/payments",
     icon: CreditCard,
     label: "Payments",
-    view: "payments",
   },
   {
-    href: "/dashboard",
+    href: "/leads",
     icon: UsersRound,
     label: "Leads",
-    view: "leads",
   },
   {
-    href: "/dashboard",
+    href: "/account",
     icon: UserRound,
     label: "Account",
-    view: "account",
   },
 ];
 
 export function MobileBottomMenu() {
   const [dashboardItem, paymentsItem, leadsItem, accountItem] = menuItems;
-  const searchParams = useSearchParams();
-  const activeView = searchParams.get("view") ?? "dashboard";
-
-  const makeHref = (view: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    params.set("view", view);
-    params.delete("page");
-
-    return `/dashboard?${params.toString()}`;
-  };
+  const pathname = usePathname();
 
   return (
     <nav
@@ -58,12 +44,12 @@ export function MobileBottomMenu() {
             asChild
             className={cn(
               "h-14 flex-col gap-1 px-1 text-[11px] font-medium",
-              activeView === item.view && "text-foreground",
+              pathname === item.href && "text-foreground",
             )}
             key={item.label}
-            variant={activeView === item.view ? "secondary" : "ghost"}
+            variant={pathname === item.href ? "secondary" : "ghost"}
           >
-            <Link href={makeHref(item.view)}>
+            <Link href={item.href}>
               <item.icon className="h-5 w-5" />
               <span>{item.label}</span>
             </Link>
@@ -86,12 +72,12 @@ export function MobileBottomMenu() {
             asChild
             className={cn(
               "h-14 flex-col gap-1 px-1 text-[11px] font-medium",
-              activeView === item.view && "text-foreground",
+              pathname === item.href && "text-foreground",
             )}
             key={item.label}
-            variant={activeView === item.view ? "secondary" : "ghost"}
+            variant={pathname === item.href ? "secondary" : "ghost"}
           >
-            <Link href={makeHref(item.view)}>
+            <Link href={item.href}>
               <item.icon className="h-5 w-5" />
               <span>{item.label}</span>
             </Link>
@@ -103,6 +89,8 @@ export function MobileBottomMenu() {
 }
 
 export function DesktopSideMenu() {
+  const pathname = usePathname();
+
   return (
     <aside
       aria-label="Desktop navigation"
@@ -119,9 +107,12 @@ export function DesktopSideMenu() {
         {menuItems.slice(0, 2).map((item) => (
           <Button
             asChild
-            className="h-16 w-full flex-col gap-1 px-1 text-[11px] font-medium"
+            className={cn(
+              "h-16 w-full flex-col gap-1 px-1 text-[11px] font-medium",
+              pathname === item.href && "text-foreground",
+            )}
             key={item.label}
-            variant="ghost"
+            variant={pathname === item.href ? "secondary" : "ghost"}
           >
             <Link href={item.href}>
               <item.icon className="h-5 w-5" />
@@ -142,9 +133,12 @@ export function DesktopSideMenu() {
         {menuItems.slice(2).map((item) => (
           <Button
             asChild
-            className="h-16 w-full flex-col gap-1 px-1 text-[11px] font-medium"
+            className={cn(
+              "h-16 w-full flex-col gap-1 px-1 text-[11px] font-medium",
+              pathname === item.href && "text-foreground",
+            )}
             key={item.label}
-            variant="ghost"
+            variant={pathname === item.href ? "secondary" : "ghost"}
           >
             <Link href={item.href}>
               <item.icon className="h-5 w-5" />

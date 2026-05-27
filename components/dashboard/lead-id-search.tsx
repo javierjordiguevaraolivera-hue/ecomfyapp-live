@@ -6,7 +6,7 @@ import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-export function LeadIdSearch() {
+export function LeadIdSearch({ pathname = "/dashboard" }: { pathname?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(searchParams.get("lead_id") ?? "");
@@ -23,7 +23,8 @@ export function LeadIdSearch() {
     }
 
     params.delete("page");
-    router.push(`/dashboard?${params.toString()}`);
+    const queryString = params.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
   };
 
   const clearSearch = () => {
@@ -31,7 +32,8 @@ export function LeadIdSearch() {
     params.delete("lead_id");
     params.delete("page");
     setValue("");
-    router.push(`/dashboard?${params.toString()}`);
+    const queryString = params.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
   };
 
   return (

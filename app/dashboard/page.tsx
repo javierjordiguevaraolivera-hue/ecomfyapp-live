@@ -33,6 +33,12 @@ import { Suspense } from "react";
 type SearchParams = Record<string, string | string[] | undefined>;
 const PAGE_SIZE = 100;
 type MobileDashboardView = "dashboard" | "payments" | "leads" | "account";
+const routePaths: Record<MobileDashboardView, string> = {
+  account: "/account",
+  dashboard: "/dashboard",
+  leads: "/leads",
+  payments: "/payments",
+};
 
 const filterKeys: LeadFilterKey[] = [
   "funnel_id",
@@ -42,6 +48,21 @@ const filterKeys: LeadFilterKey[] = [
   "source",
   "domain",
   "sub1",
+];
+
+const closeOptions = [
+  {
+    label: "NLG",
+    logoSrc: "/NLG-logo.png",
+  },
+  {
+    label: "Americo",
+    logoSrc: "/americo-logo.png",
+  },
+  {
+    label: "Mutual",
+    logoSrc: "/mutual-of-omaha logo.png",
+  },
 ];
 
 async function getSession() {
@@ -75,10 +96,15 @@ function getSearchValues(searchParams: SearchParams, key: string) {
 function makeDashboardHref(
   searchParams: SearchParams,
   nextValues: Record<string, string>,
+  pathname = "/dashboard",
 ) {
   const params = new URLSearchParams();
 
   Object.entries(searchParams).forEach(([key, value]) => {
+    if (key === "view") {
+      return;
+    }
+
     const cleanValues = Array.isArray(value) ? value : [value];
 
     cleanValues.forEach((cleanValue) => {
@@ -97,7 +123,9 @@ function makeDashboardHref(
     params.delete("page");
   }
 
-  return `/dashboard?${params.toString()}`;
+  const queryString = params.toString();
+
+  return queryString ? `${pathname}?${queryString}` : pathname;
 }
 
 function getActiveFilters(searchParams: SearchParams) {
@@ -132,18 +160,6 @@ function normalizePage(value?: string) {
   return page;
 }
 
-function normalizeMobileDashboardView(value?: string): MobileDashboardView {
-  if (
-    value === "payments" ||
-    value === "leads" ||
-    value === "account"
-  ) {
-    return value;
-  }
-
-  return "dashboard";
-}
-
 function FilterButton({
   active,
   href,
@@ -167,9 +183,11 @@ function FilterButton({
 }
 
 function TimezoneSwitcher({
+  pathname,
   searchParams,
   timezone,
 }: {
+  pathname: string;
   searchParams: SearchParams;
   timezone: string;
 }) {
@@ -187,7 +205,7 @@ function TimezoneSwitcher({
         }
         href={makeDashboardHref(searchParams, {
           timezone: "America/New_York",
-        })}
+        }, pathname)}
       >
         <img
           alt="New York"
@@ -204,7 +222,7 @@ function TimezoneSwitcher({
         }
         href={makeDashboardHref(searchParams, {
           timezone: "America/Lima",
-        })}
+        }, pathname)}
       >
         <img
           alt="Lima"
@@ -247,10 +265,12 @@ function SortIconButton({
 
 function PaginationControls({
   currentPage,
+  pathname,
   totalCount,
   searchParams,
 }: {
   currentPage: number;
+  pathname: string;
   totalCount: number;
   searchParams: SearchParams;
 }) {
@@ -270,7 +290,7 @@ function PaginationControls({
             className={!hasPrevious ? "pointer-events-none opacity-50" : ""}
             href={makeDashboardHref(searchParams, {
               page: String(Math.max(currentPage - 1, 1)),
-            })}
+            }, pathname)}
           >
             <ChevronLeft />
             Anterior
@@ -282,7 +302,7 @@ function PaginationControls({
             className={!hasNext ? "pointer-events-none opacity-50" : ""}
             href={makeDashboardHref(searchParams, {
               page: String(Math.min(currentPage + 1, totalPages)),
-            })}
+            }, pathname)}
           >
             Siguiente
             <ChevronRight />
@@ -294,21 +314,6 @@ function PaginationControls({
 }
 
 function MobileDashboardOverview() {
-  const closeOptions = [
-    {
-      label: "NLG",
-      logoSrc: "/NLG-logo.png",
-    },
-    {
-      label: "Americo",
-      logoSrc: "/americo-logo.png",
-    },
-    {
-      label: "Mutual",
-      logoSrc: "/mutual-of-omaha logo.png",
-    },
-  ];
-
   return (
     <div className="grid gap-3 md:hidden">
       <div className="rounded-lg border bg-card p-4">
@@ -352,9 +357,41 @@ function MobileDashboardOverview() {
   );
 }
 
+function DesktopDashboardActions() {
+  return (
+    <section className="hidden rounded-lg border bg-card p-4 md:block">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-base font-semibold">Registrar un cierre</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Selecciona la compania para iniciar el registro.
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-3">
+        {closeOptions.map((option) => (
+          <button
+            className="flex h-20 min-w-0 items-center justify-center rounded-lg border bg-background px-5 py-4 hover:bg-accent"
+            key={option.label}
+            type="button"
+          >
+            <img
+              alt={option.label}
+              className="max-h-12 max-w-full object-contain"
+              src={option.logoSrc}
+            />
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 async function DashboardContent({
+  routeView,
   searchParamsPromise,
 }: {
+  routeView: MobileDashboardView;
   searchParamsPromise: Promise<SearchParams>;
 }) {
   await connection();
@@ -364,9 +401,8 @@ async function DashboardContent({
   const timezone = normalizeTimezone(getSearchValue(searchParams, "timezone"));
   const sort = normalizeSortDirection(getSearchValue(searchParams, "sort"));
   const currentPage = normalizePage(getSearchValue(searchParams, "page"));
-  const mobileView = normalizeMobileDashboardView(
-    getSearchValue(searchParams, "view"),
-  );
+  const mobileView = routeView;
+  const currentPath = routePaths[routeView];
   const activeFilters = getActiveFilters(searchParams);
   const leadIdSearch = getSearchValue(searchParams, "lead_id")?.trim();
   let result:
@@ -453,6 +489,7 @@ async function DashboardContent({
           <div className="flex items-center gap-3">
             <div className="hidden xl:flex">
               <TimezoneSwitcher
+                pathname={currentPath}
                 searchParams={searchParams}
                 timezone={timezone}
               />
@@ -468,6 +505,8 @@ async function DashboardContent({
       </header>
 
       <section className="flex min-h-0 flex-1 flex-col gap-3 px-3 pb-24 pt-3 sm:gap-4 sm:px-6 sm:py-4">
+        {mobileView === "dashboard" ? <DesktopDashboardActions /> : null}
+
         {mobileView === "dashboard" ? (
           <MobileDashboardOverview />
         ) : null}
@@ -476,7 +515,7 @@ async function DashboardContent({
           className={
             mobileView === "leads"
               ? "flex min-h-0 flex-1 flex-col gap-3 sm:gap-4"
-              : "hidden min-h-0 flex-1 flex-col gap-3 sm:gap-4 md:flex"
+              : "hidden min-h-0 flex-1 flex-col gap-3 sm:gap-4"
             }
         >
           <div className="grid grid-cols-[1fr_auto] items-start gap-3 sm:gap-4">
@@ -498,7 +537,7 @@ async function DashboardContent({
           </div>
 
           <div className="flex flex-col gap-3 sm:gap-4">
-            <LeadIdSearch />
+            <LeadIdSearch pathname={currentPath} />
 
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center justify-between gap-3">
@@ -513,7 +552,7 @@ async function DashboardContent({
                       }
                       href={makeDashboardHref(searchParams, {
                         date: filter.value,
-                      })}
+                      }, currentPath)}
                       key={filter.value}
                     >
                       {filter.label}
@@ -522,17 +561,26 @@ async function DashboardContent({
                   <SortIconButton
                     active={sort === "desc"}
                     direction="desc"
-                    href={makeDashboardHref(searchParams, { sort: "desc" })}
+                    href={makeDashboardHref(
+                      searchParams,
+                      { sort: "desc" },
+                      currentPath,
+                    )}
                   />
                   <SortIconButton
                     active={sort === "asc"}
                     direction="asc"
-                    href={makeDashboardHref(searchParams, { sort: "asc" })}
+                    href={makeDashboardHref(
+                      searchParams,
+                      { sort: "asc" },
+                      currentPath,
+                    )}
                   />
                 </div>
               </div>
               <div className="ml-auto xl:hidden">
                 <TimezoneSwitcher
+                  pathname={currentPath}
                   searchParams={searchParams}
                   timezone={timezone}
                 />
@@ -548,6 +596,7 @@ async function DashboardContent({
             <LeadsTable
               activeFilters={activeFilters}
               filterOptions={filterOptions}
+              pathname={currentPath}
               rows={result.rows}
               totalCount={result.totalCount}
               timezone={timezone}
@@ -556,6 +605,7 @@ async function DashboardContent({
           {!dataError ? (
             <PaginationControls
               currentPage={currentPage}
+              pathname={currentPath}
               searchParams={searchParams}
               totalCount={result.totalCount}
             />
@@ -570,7 +620,6 @@ async function DashboardContent({
 function DashboardFallback() {
   return (
     <>
-      <DesktopSideMenu />
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6">
           <img
@@ -591,16 +640,29 @@ function DashboardFallback() {
   );
 }
 
-export default function DashboardPage({
+export function DashboardShell({
+  routeView,
   searchParams,
 }: {
+  routeView: MobileDashboardView;
   searchParams: Promise<SearchParams>;
 }) {
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-background md:pl-24">
       <Suspense fallback={<DashboardFallback />}>
-        <DashboardContent searchParamsPromise={searchParams} />
+        <DashboardContent
+          routeView={routeView}
+          searchParamsPromise={searchParams}
+        />
       </Suspense>
     </main>
   );
+}
+
+export default function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  return <DashboardShell routeView="dashboard" searchParams={searchParams} />;
 }

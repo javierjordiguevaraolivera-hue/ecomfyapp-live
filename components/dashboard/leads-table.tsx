@@ -29,6 +29,7 @@ import { useState } from "react";
 type LeadsTableProps = {
   rows: LeadDashboardRow[];
   totalCount: number;
+  pathname?: string;
   timezone: DashboardTimezone;
   filterOptions: LeadFilterOptions;
   activeFilters: LeadFilters;
@@ -105,12 +106,14 @@ function FilterableHeader({
   options,
   activeValue,
   filteredCount,
+  pathname = "/dashboard",
 }: {
   label: string;
   filterKey: LeadFilterKey;
   options: string[];
   activeValue?: string | string[];
   filteredCount: number;
+  pathname?: string;
 }) {
   const searchParams = useSearchParams();
   const activeValues = Array.isArray(activeValue)
@@ -143,7 +146,8 @@ function FilterableHeader({
     }
 
     params.delete("page");
-    return `/dashboard?${params.toString()}`;
+    const queryString = params.toString();
+    return queryString ? `${pathname}?${queryString}` : pathname;
   };
 
   return (
@@ -197,6 +201,7 @@ function FilterableHeader({
 export function LeadsTable({
   rows,
   totalCount,
+  pathname = "/dashboard",
   timezone,
   filterOptions,
   activeFilters,
@@ -223,6 +228,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.funnel_id}
                 options={filterOptions.funnel_id}
+                pathname={pathname}
               />
             </th>
             <th className="px-3 py-2 font-medium">
@@ -232,6 +238,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.lead_status}
                 options={filterOptions.lead_status}
+                pathname={pathname}
               />
             </th>
             <th className="hidden px-3 py-2 font-medium xl:table-cell">
@@ -241,6 +248,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.sold_as}
                 options={filterOptions.sold_as}
+                pathname={pathname}
               />
             </th>
             <th className="hidden px-3 py-2 font-medium xl:table-cell">
@@ -250,6 +258,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.language}
                 options={filterOptions.language}
+                pathname={pathname}
               />
             </th>
             <th className="px-3 py-2 font-medium">
@@ -259,6 +268,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.source}
                 options={filterOptions.source}
+                pathname={pathname}
               />
             </th>
             <th className="px-3 py-2 font-medium xl:hidden">
@@ -268,6 +278,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.sold_as}
                 options={filterOptions.sold_as}
+                pathname={pathname}
               />
             </th>
             <th className="hidden px-3 py-2 font-medium xl:table-cell">
@@ -277,6 +288,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.domain}
                 options={filterOptions.domain}
+                pathname={pathname}
               />
             </th>
             <th className="px-3 py-2 font-medium">
@@ -286,6 +298,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.sub1}
                 options={filterOptions.sub1}
+                pathname={pathname}
               />
             </th>
             <th className="px-3 py-2 font-medium">Printed numbers</th>
@@ -296,6 +309,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.language}
                 options={filterOptions.language}
+                pathname={pathname}
               />
             </th>
             <th className="px-3 py-2 font-medium xl:hidden">
@@ -305,6 +319,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.domain}
                 options={filterOptions.domain}
+                pathname={pathname}
               />
             </th>
             <th className="px-3 py-2 font-medium xl:hidden">
@@ -314,6 +329,7 @@ export function LeadsTable({
                 filteredCount={totalCount}
                 label={filterLabels.funnel_id}
                 options={filterOptions.funnel_id}
+                pathname={pathname}
               />
             </th>
           </tr>
