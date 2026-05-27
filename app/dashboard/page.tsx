@@ -1,6 +1,9 @@
 import { LeadsTable } from "@/components/dashboard/leads-table";
 import { LeadIdSearch } from "@/components/dashboard/lead-id-search";
-import { MobileBottomMenu } from "@/components/dashboard/mobile-bottom-menu";
+import {
+  DesktopSideMenu,
+  MobileBottomMenu,
+} from "@/components/dashboard/mobile-bottom-menu";
 import { PpcStatusCard } from "@/components/dashboard/ppc-status-card";
 import { ReadyForSellNotifier } from "@/components/dashboard/ready-for-sell-notifier";
 import { RefreshButton } from "@/components/dashboard/refresh-button";
@@ -29,6 +32,7 @@ import { Suspense } from "react";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 const PAGE_SIZE = 100;
+type MobileDashboardView = "dashboard" | "payments" | "leads" | "account";
 
 const filterKeys: LeadFilterKey[] = [
   "funnel_id",
@@ -126,6 +130,18 @@ function normalizePage(value?: string) {
   }
 
   return page;
+}
+
+function normalizeMobileDashboardView(value?: string): MobileDashboardView {
+  if (
+    value === "payments" ||
+    value === "leads" ||
+    value === "account"
+  ) {
+    return value;
+  }
+
+  return "dashboard";
 }
 
 function FilterButton({
@@ -277,6 +293,65 @@ function PaginationControls({
   );
 }
 
+function MobileDashboardOverview() {
+  const closeOptions = [
+    {
+      label: "NLG",
+      logoSrc: "/NLG-logo.png",
+    },
+    {
+      label: "Americo",
+      logoSrc: "/americo-logo.png",
+    },
+    {
+      label: "Mutual",
+      logoSrc: "/mutual-of-omaha logo.png",
+    },
+  ];
+
+  return (
+    <div className="grid gap-3 md:hidden">
+      <div className="rounded-lg border bg-card p-4">
+        <h2 className="text-base font-semibold">Registrar un cierre</h2>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {closeOptions.map((option, index) => (
+            <button
+              className="flex h-16 min-w-0 items-center justify-center rounded-lg border bg-background px-2 py-3 text-xs font-medium hover:bg-accent"
+              key={option.label}
+              type="button"
+            >
+              <span className="flex h-10 w-full items-center justify-center text-sm font-semibold">
+                {option.logoSrc ? (
+                  <img
+                    alt={option.label}
+                    className="max-h-full max-w-full object-contain"
+                    src={option.logoSrc}
+                  />
+                ) : (
+                  index + 1
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="hidden">
+        <p className="text-sm font-semibold">PPC Status</p>
+        <div className="mt-3 grid gap-2 text-sm">
+          <div className="flex items-center justify-between">
+            <span>Español</span>
+            <span className="font-medium">OFF</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>Inglés</span>
+            <span className="font-medium">OFF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 async function DashboardContent({
   searchParamsPromise,
 }: {
@@ -289,6 +364,9 @@ async function DashboardContent({
   const timezone = normalizeTimezone(getSearchValue(searchParams, "timezone"));
   const sort = normalizeSortDirection(getSearchValue(searchParams, "sort"));
   const currentPage = normalizePage(getSearchValue(searchParams, "page"));
+  const mobileView = normalizeMobileDashboardView(
+    getSearchValue(searchParams, "view"),
+  );
   const activeFilters = getActiveFilters(searchParams);
   const leadIdSearch = getSearchValue(searchParams, "lead_id")?.trim();
   let result:
@@ -364,6 +442,7 @@ async function DashboardContent({
 
   return (
     <>
+      <DesktopSideMenu />
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6">
           <img
@@ -389,87 +468,99 @@ async function DashboardContent({
       </header>
 
       <section className="flex min-h-0 flex-1 flex-col gap-3 px-3 pb-24 pt-3 sm:gap-4 sm:px-6 sm:py-4">
-        <div className="grid grid-cols-[1fr_auto] items-start gap-3 sm:gap-4">
-          <div className="space-y-1">
-            <CardTitle className="text-xl">Leads</CardTitle>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
-              <span className="text-foreground">Leads hoy: {todayCount}</span>
-              <span className="text-foreground">
-                Leads ayer: {yesterdayCount}
-              </span>
-            </div>
-          </div>
-          <div className="justify-self-end">
-            <PpcStatusCard
-              initialEnglishStatus={ppcEnglishStatus}
-              initialSpanishStatus={ppcSpanishStatus}
-            />
-          </div>
-        </div>
+        {mobileView === "dashboard" ? (
+          <MobileDashboardOverview />
+        ) : null}
 
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <LeadIdSearch />
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-2">
-                {dateFilters.map((filter) => (
-                  <FilterButton
-                    active={dateFilter === filter.value}
-                    className={
-                      filter.value === "7d" || filter.value === "all"
-                        ? "hidden xl:inline-flex"
-                        : undefined
-                    }
-                    href={makeDashboardHref(searchParams, {
-                      date: filter.value,
-                    })}
-                    key={filter.value}
-                  >
-                    {filter.label}
-                  </FilterButton>
-                ))}
-                <SortIconButton
-                  active={sort === "desc"}
-                  direction="desc"
-                  href={makeDashboardHref(searchParams, { sort: "desc" })}
-                />
-                <SortIconButton
-                  active={sort === "asc"}
-                  direction="asc"
-                  href={makeDashboardHref(searchParams, { sort: "asc" })}
-                />
+        <div
+          className={
+            mobileView === "leads"
+              ? "flex min-h-0 flex-1 flex-col gap-3 sm:gap-4"
+              : "hidden min-h-0 flex-1 flex-col gap-3 sm:gap-4 md:flex"
+            }
+        >
+          <div className="grid grid-cols-[1fr_auto] items-start gap-3 sm:gap-4">
+            <div className="space-y-1">
+              <CardTitle className="text-xl">Leads</CardTitle>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                <span className="text-foreground">Leads hoy: {todayCount}</span>
+                <span className="text-foreground">
+                  Leads ayer: {yesterdayCount}
+                </span>
               </div>
             </div>
-            <div className="ml-auto xl:hidden">
-              <TimezoneSwitcher
-                searchParams={searchParams}
-                timezone={timezone}
+            <div className="justify-self-end">
+              <PpcStatusCard
+                initialEnglishStatus={ppcEnglishStatus}
+                initialSpanishStatus={ppcSpanishStatus}
               />
             </div>
           </div>
-        </div>
 
-        {dataError ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            {dataError}
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <LeadIdSearch />
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-2">
+                  {dateFilters.map((filter) => (
+                    <FilterButton
+                      active={dateFilter === filter.value}
+                      className={
+                        filter.value === "7d" || filter.value === "all"
+                          ? "hidden xl:inline-flex"
+                          : undefined
+                      }
+                      href={makeDashboardHref(searchParams, {
+                        date: filter.value,
+                      })}
+                      key={filter.value}
+                    >
+                      {filter.label}
+                    </FilterButton>
+                  ))}
+                  <SortIconButton
+                    active={sort === "desc"}
+                    direction="desc"
+                    href={makeDashboardHref(searchParams, { sort: "desc" })}
+                  />
+                  <SortIconButton
+                    active={sort === "asc"}
+                    direction="asc"
+                    href={makeDashboardHref(searchParams, { sort: "asc" })}
+                  />
+                </div>
+              </div>
+              <div className="ml-auto xl:hidden">
+                <TimezoneSwitcher
+                  searchParams={searchParams}
+                  timezone={timezone}
+                />
+              </div>
+            </div>
           </div>
-        ) : (
-          <LeadsTable
-            activeFilters={activeFilters}
-            filterOptions={filterOptions}
-            rows={result.rows}
-            totalCount={result.totalCount}
-            timezone={timezone}
-          />
-        )}
-        {!dataError ? (
-          <PaginationControls
-            currentPage={currentPage}
-            searchParams={searchParams}
-            totalCount={result.totalCount}
-          />
-        ) : null}
+
+          {dataError ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {dataError}
+            </div>
+          ) : (
+            <LeadsTable
+              activeFilters={activeFilters}
+              filterOptions={filterOptions}
+              rows={result.rows}
+              totalCount={result.totalCount}
+              timezone={timezone}
+            />
+          )}
+          {!dataError ? (
+            <PaginationControls
+              currentPage={currentPage}
+              searchParams={searchParams}
+              totalCount={result.totalCount}
+            />
+          ) : null}
+        </div>
       </section>
       <MobileBottomMenu />
     </>
@@ -479,6 +570,7 @@ async function DashboardContent({
 function DashboardFallback() {
   return (
     <>
+      <DesktopSideMenu />
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6">
           <img
@@ -505,7 +597,7 @@ export default function DashboardPage({
   searchParams: Promise<SearchParams>;
 }) {
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-background">
+    <main className="flex h-screen flex-col overflow-hidden bg-background md:pl-24">
       <Suspense fallback={<DashboardFallback />}>
         <DashboardContent searchParamsPromise={searchParams} />
       </Suspense>
