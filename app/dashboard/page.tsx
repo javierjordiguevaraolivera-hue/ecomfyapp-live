@@ -1,4 +1,6 @@
+import { AccountOverview as AccountSettingsOverview } from "@/components/dashboard/account-overview";
 import { LeadsTable } from "@/components/dashboard/leads-table";
+import { PaymentsOverview } from "@/components/dashboard/payments-overview";
 import { LeadIdSearch } from "@/components/dashboard/lead-id-search";
 import {
   DesktopSideMenu,
@@ -25,7 +27,14 @@ import {
 import type { DateFilter, LeadFilterKey, LeadFilters } from "@/lib/leads/types";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  Globe2,
+  Languages,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -387,6 +396,64 @@ function DesktopDashboardActions() {
   );
 }
 
+function AccountOverview({ email }: { email: string }) {
+  const displayName = email.split("@")[0] || "Account";
+  const initials = displayName
+    .split(/[._-]/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  return (
+    <div className="grid gap-3 md:max-w-md">
+      <div className="rounded-lg border bg-card p-3">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-base font-semibold text-foreground">
+            {initials || "A"}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold">{displayName}</p>
+            <p className="truncate text-sm text-muted-foreground">{email}</p>
+          </div>
+        </div>
+      </div>
+      <div className="rounded-lg border bg-card p-3">
+        <h2 className="text-sm font-semibold">Preferencias</h2>
+        <div className="mt-3 grid divide-y">
+          <label className="flex items-center gap-3 py-2 text-sm">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
+              <Languages className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1 font-medium">Idioma</span>
+            <select
+              className="h-9 w-32 rounded-md border bg-background px-2 text-sm"
+              defaultValue="es"
+            >
+              <option value="es">Español</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-3 py-2 text-sm">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
+              <Globe2 className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1 font-medium">Timezone</span>
+            <select
+              className="h-9 w-36 rounded-md border bg-background px-2 text-sm"
+              defaultValue="America/New_York"
+            >
+              <option value="America/New_York">New York</option>
+              <option value="America/Lima">Lima</option>
+              <option value="America/Bogota">Bogota</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 async function DashboardContent({
   routeView,
   searchParamsPromise,
@@ -509,6 +576,12 @@ async function DashboardContent({
 
         {mobileView === "dashboard" ? (
           <MobileDashboardOverview />
+        ) : null}
+
+        {mobileView === "payments" ? <PaymentsOverview /> : null}
+
+        {mobileView === "account" ? (
+          <AccountSettingsOverview email={session.email} />
         ) : null}
 
         <div
