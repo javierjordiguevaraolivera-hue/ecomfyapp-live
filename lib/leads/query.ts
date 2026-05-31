@@ -10,11 +10,16 @@ import type {
   SortDirection,
 } from "./types";
 
-type LeadRecord = Omit<LeadDashboardRow, "printed_numbers">;
+type LeadRecord = Omit<LeadDashboardRow, "adaccount_name" | "printed_numbers">;
 
 type RingbaCallEvent = {
   lead_id: string | null;
   printed_number: string | null;
+};
+
+type LeadMetadata = {
+  lead_id: string | null;
+  adaccount_name: string | null;
 };
 
 export type LeadQueryOptions = {
@@ -125,7 +130,17 @@ export async function getLeadDashboardRows({
     throw new Error(eventsError.message);
   }
 
+  const { data: metadata, error: metadataError } = await supabase
+    .from("lead_metadata")
+    .select("lead_id,adaccount_name")
+    .in("lead_id", leadIds);
+
+  if (metadataError) {
+    throw new Error(metadataError.message);
+  }
+
   const numbersByLeadId = new Map<string, string[]>();
+  const adAccountNameByLeadId = new Map<string, string>();
 
   ((events ?? []) as RingbaCallEvent[]).forEach((event) => {
     if (!event.lead_id || !event.printed_number) {
@@ -141,9 +156,16 @@ export async function getLeadDashboardRows({
     numbersByLeadId.set(event.lead_id, current);
   });
 
+  ((metadata ?? []) as LeadMetadata[]).forEach((leadMetadata) => {
+    if (leadMetadata.lead_id && leadMetadata.adaccount_name) {
+      adAccountNameByLeadId.set(leadMetadata.lead_id, leadMetadata.adaccount_name);
+    }
+  });
+
   return {
     rows: typedLeads.map((lead) => ({
       ...lead,
+      adaccount_name: adAccountNameByLeadId.get(lead.lead_id) ?? null,
       printed_numbers: numbersByLeadId.get(lead.lead_id) ?? [],
     })),
     totalCount: count ?? typedLeads.length,

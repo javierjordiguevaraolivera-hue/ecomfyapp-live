@@ -216,7 +216,7 @@ export function LeadsTable({
 
   return (
     <div className="min-h-0 flex-1 overflow-auto rounded-lg border">
-      <table className="w-full min-w-[1180px] border-collapse text-sm">
+      <table className="w-full min-w-[1320px] border-collapse text-sm">
         <thead className="sticky top-0 z-10 bg-muted text-left text-[11px] uppercase text-muted-foreground shadow-sm">
           <tr>
             <th className="px-3 py-2 font-medium">Lead ID</th>
@@ -301,6 +301,9 @@ export function LeadsTable({
                 pathname={pathname}
               />
             </th>
+            <th className="hidden px-3 py-2 font-medium xl:table-cell">
+              Ad Account Name
+            </th>
             <th className="px-3 py-2 font-medium">Printed numbers</th>
             <th className="px-3 py-2 font-medium xl:hidden">
               <FilterableHeader
@@ -339,7 +342,7 @@ export function LeadsTable({
             <tr>
               <td
                 className="px-4 py-12 text-center text-sm text-muted-foreground"
-                colSpan={13}
+                colSpan={14}
               >
                 No hay leads para este filtro.
               </td>
@@ -390,6 +393,9 @@ export function LeadsTable({
                 {row.domain ?? <EmptyValue />}
               </td>
               <td className="px-3 py-1.5">{row.sub1 ?? <EmptyValue />}</td>
+              <td className="hidden px-3 py-1.5 xl:table-cell">
+                {row.adaccount_name ?? <EmptyValue />}
+              </td>
               <td className="min-w-[220px] px-3 py-1.5">
                 {row.printed_numbers.length > 0 ? (
                   <div className="flex flex-wrap gap-2">

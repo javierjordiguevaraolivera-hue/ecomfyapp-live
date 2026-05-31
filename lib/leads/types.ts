@@ -14,6 +14,7 @@ export type LeadDashboardRow = {
   source: string | null;
   domain: string | null;
   sub1: string | null;
+  adaccount_name: string | null;
   printed_numbers: string[];
 };
 
