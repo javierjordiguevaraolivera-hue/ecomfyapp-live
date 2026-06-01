@@ -57,6 +57,7 @@ const filterKeys: LeadFilterKey[] = [
   "source",
   "domain",
   "sub1",
+  "adaccount_name",
 ];
 
 const closeOptions = [
@@ -483,6 +484,7 @@ async function DashboardContent({
     source: [],
     domain: [],
     sub1: [],
+    adaccount_name: [],
   };
   let todayCount = 0;
   let yesterdayCount = 0;

@@ -43,6 +43,7 @@ const filterLabels: Record<LeadFilterKey, string> = {
   source: "Source",
   domain: "Domain",
   sub1: "Sub1",
+  adaccount_name: "Ad Account Name",
 };
 
 function EmptyValue() {
@@ -302,7 +303,14 @@ export function LeadsTable({
               />
             </th>
             <th className="hidden px-3 py-2 font-medium xl:table-cell">
-              Ad Account Name
+              <FilterableHeader
+                activeValue={activeFilters.adaccount_name}
+                filterKey="adaccount_name"
+                filteredCount={totalCount}
+                label={filterLabels.adaccount_name}
+                options={filterOptions.adaccount_name}
+                pathname={pathname}
+              />
             </th>
             <th className="px-3 py-2 font-medium">Printed numbers</th>
             <th className="px-3 py-2 font-medium xl:hidden">

@@ -32,7 +32,7 @@ export type LeadQueryOptions = {
   pageSize?: number;
 };
 
-const filterKeys: LeadFilterKey[] = [
+const leadTableFilterKeys: Array<Exclude<LeadFilterKey, "adaccount_name">> = [
   "funnel_id",
   "lead_status",
   "sold_as",
@@ -41,6 +41,8 @@ const filterKeys: LeadFilterKey[] = [
   "domain",
   "sub1",
 ];
+
+const filterKeys: LeadFilterKey[] = [...leadTableFilterKeys, "adaccount_name"];
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -87,7 +89,36 @@ export async function getLeadDashboardRows({
     query = query.gte("created_at", range.from).lt("created_at", range.to);
   }
 
-  filterKeys.forEach((key) => {
+  const adAccountName = filters.adaccount_name;
+
+  if (adAccountName) {
+    let metadataQuery = supabase.from("lead_metadata").select("lead_id").limit(5000);
+
+    if (Array.isArray(adAccountName)) {
+      metadataQuery = metadataQuery.in("adaccount_name", adAccountName);
+    } else {
+      metadataQuery = metadataQuery.eq("adaccount_name", adAccountName);
+    }
+
+    const { data: matchingMetadata, error: matchingMetadataError } =
+      await metadataQuery;
+
+    if (matchingMetadataError) {
+      throw new Error(matchingMetadataError.message);
+    }
+
+    const matchingLeadIds = (matchingMetadata ?? [])
+      .map((leadMetadata) => leadMetadata.lead_id)
+      .filter((leadId): leadId is string => typeof leadId === "string");
+
+    if (matchingLeadIds.length === 0) {
+      return { rows: [], totalCount: 0 };
+    }
+
+    query = query.in("lead_id", matchingLeadIds);
+  }
+
+  leadTableFilterKeys.forEach((key) => {
     const value = filters[key];
 
     if (Array.isArray(value) && value.length > 0) {
@@ -188,10 +219,22 @@ export async function getLeadFilterOptions({
     query = query.gte("created_at", range.from).lt("created_at", range.to);
   }
 
-  const { data, error } = await query;
+  const [{ data, error }, { data: metadata, error: metadataError }] =
+    await Promise.all([
+      query,
+      supabase
+        .from("lead_metadata")
+        .select("adaccount_name")
+        .not("adaccount_name", "is", null)
+        .limit(5000),
+    ]);
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (metadataError) {
+    throw new Error(metadataError.message);
   }
 
   const options = filterKeys.reduce((acc, key) => {
@@ -200,7 +243,7 @@ export async function getLeadFilterOptions({
   }, {} as LeadFilterOptions);
 
   (data ?? []).forEach((row) => {
-    filterKeys.forEach((key) => {
+    leadTableFilterKeys.forEach((key) => {
       const value = row[key];
 
       if (typeof value === "string" && value && !options[key].includes(value)) {
@@ -208,6 +251,17 @@ export async function getLeadFilterOptions({
       }
     });
   });
+
+  ((metadata ?? []) as Array<Pick<LeadMetadata, "adaccount_name">>).forEach(
+    ({ adaccount_name: adAccountName }) => {
+      if (
+        adAccountName &&
+        !options.adaccount_name.includes(adAccountName)
+      ) {
+        options.adaccount_name.push(adAccountName);
+      }
+    },
+  );
 
   filterKeys.forEach((key) => {
     options[key].sort((left, right) => left.localeCompare(right));

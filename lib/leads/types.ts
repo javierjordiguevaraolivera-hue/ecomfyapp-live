@@ -25,7 +25,8 @@ export type LeadFilterKey =
   | "language"
   | "source"
   | "domain"
-  | "sub1";
+  | "sub1"
+  | "adaccount_name";
 
 export type LeadFilters = Partial<Record<LeadFilterKey, string | string[]>>;
 
