@@ -221,6 +221,12 @@ export function LeadsTable({
         <thead className="sticky top-0 z-10 bg-muted text-left text-[11px] uppercase text-muted-foreground shadow-sm">
           <tr>
             <th className="px-3 py-2 font-medium">Lead ID</th>
+            <th className="hidden px-3 py-2 font-medium xl:table-cell">
+              FIRST_NAME
+            </th>
+            <th className="hidden px-3 py-2 font-medium xl:table-cell">
+              NUMBER
+            </th>
             <th className="px-3 py-2 font-medium">Created</th>
             <th className="hidden px-3 py-2 font-medium xl:table-cell">
               <FilterableHeader
@@ -350,7 +356,7 @@ export function LeadsTable({
             <tr>
               <td
                 className="px-4 py-12 text-center text-sm text-muted-foreground"
-                colSpan={14}
+                colSpan={16}
               >
                 No hay leads para este filtro.
               </td>
@@ -372,6 +378,12 @@ export function LeadsTable({
                     {copiedValue === row.lead_id ? <Check /> : <Copy />}
                   </Button>
                 </div>
+              </td>
+              <td className="hidden px-3 py-1.5 xl:table-cell">
+                {row.first_name ?? <EmptyValue />}
+              </td>
+              <td className="hidden whitespace-nowrap px-3 py-1.5 xl:table-cell">
+                {row.number ?? <EmptyValue />}
               </td>
               <td className="whitespace-nowrap px-3 py-1.5">
                 <span className="hidden xl:inline">

@@ -79,7 +79,7 @@ export async function getLeadDashboardRows({
   let query = supabase
     .from("leads")
     .select(
-      "lead_id,created_at,funnel_id,lead_status,sold_as,language,source,domain,sub1",
+      "lead_id,first_name,number,created_at,funnel_id,lead_status,sold_as,language,source,domain,sub1",
       { count: "exact" },
     )
     .order("created_at", { ascending: sort === "asc" })
