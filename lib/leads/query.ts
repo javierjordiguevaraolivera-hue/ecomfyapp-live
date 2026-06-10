@@ -79,7 +79,7 @@ export async function getLeadDashboardRows({
   let query = supabase
     .from("leads")
     .select(
-      "lead_id,first_name,number,created_at,funnel_id,lead_status,sold_as,language,source,domain,sub1",
+      "lead_id,first_name,phone_number,created_at,funnel_id,lead_status,sold_as,language,source,domain,sub1",
       { count: "exact" },
     )
     .order("created_at", { ascending: sort === "asc" })
@@ -129,11 +129,9 @@ export async function getLeadDashboardRows({
   });
 
   if (leadIdSearch) {
-    if (!uuidRegex.test(leadIdSearch)) {
-      return { rows: [], totalCount: 0 };
-    }
-
-    query = query.eq("lead_id", leadIdSearch);
+    query = uuidRegex.test(leadIdSearch)
+      ? query.eq("lead_id", leadIdSearch)
+      : query.ilike("phone_number", `%${leadIdSearch}%`);
   }
 
   const { data: leads, error: leadsError, count } = await query;

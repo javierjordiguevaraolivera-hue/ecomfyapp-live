@@ -43,12 +43,12 @@ export function LeadIdSearch({ pathname = "/dashboard" }: { pathname?: string })
         <Input
           className="h-9 pl-8 pr-8"
           onChange={(event) => setValue(event.target.value)}
-          placeholder="Buscar por lead ID"
+          placeholder="Buscar por lead ID o teléfono"
           value={value}
         />
         {value ? (
           <button
-            aria-label="Clear lead ID search"
+            aria-label="Limpiar búsqueda"
             className="absolute right-2 top-2 rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
             onClick={clearSearch}
             type="button"

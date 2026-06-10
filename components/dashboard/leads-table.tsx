@@ -383,7 +383,7 @@ export function LeadsTable({
                 {row.first_name ?? <EmptyValue />}
               </td>
               <td className="hidden whitespace-nowrap px-3 py-1.5 xl:table-cell">
-                {row.number ?? <EmptyValue />}
+                {row.phone_number ?? <EmptyValue />}
               </td>
               <td className="whitespace-nowrap px-3 py-1.5">
                 <span className="hidden xl:inline">

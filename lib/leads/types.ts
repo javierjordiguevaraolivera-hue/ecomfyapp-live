@@ -7,7 +7,7 @@ export type SortDirection = "desc" | "asc";
 export type LeadDashboardRow = {
   lead_id: string;
   first_name: string | null;
-  number: string | null;
+  phone_number: string | null;
   created_at: string;
   funnel_id: string;
   lead_status: string;
