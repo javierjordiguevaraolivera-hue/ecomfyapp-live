@@ -33,3 +33,8 @@ export type LeadFilterKey =
 export type LeadFilters = Partial<Record<LeadFilterKey, string | string[]>>;
 
 export type LeadFilterOptions = Record<LeadFilterKey, string[]>;
+
+export type DomainLeadCount = {
+  domain: string;
+  count: number;
+};

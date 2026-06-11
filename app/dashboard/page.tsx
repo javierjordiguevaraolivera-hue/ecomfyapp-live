@@ -9,6 +9,7 @@ import {
 import { PpcStatusCard } from "@/components/dashboard/ppc-status-card";
 import { ReadyForSellNotifier } from "@/components/dashboard/ready-for-sell-notifier";
 import { RefreshButton } from "@/components/dashboard/refresh-button";
+import { TrafficDomainsCard } from "@/components/dashboard/traffic-domains-card";
 import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -21,10 +22,16 @@ import {
 } from "@/lib/leads/date-filters";
 import {
   getLeadCountByDateFilter,
+  getLeadCountsByDomain,
   getLeadDashboardRows,
   getLeadFilterOptions,
 } from "@/lib/leads/query";
-import type { DateFilter, LeadFilterKey, LeadFilters } from "@/lib/leads/types";
+import type {
+  DateFilter,
+  DomainLeadCount,
+  LeadFilterKey,
+  LeadFilters,
+} from "@/lib/leads/types";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import {
@@ -488,6 +495,7 @@ async function DashboardContent({
   };
   let todayCount = 0;
   let yesterdayCount = 0;
+  let domainLeadCounts: DomainLeadCount[] = [];
   let ppcEnglishStatus: PpcStatus = "OFF";
   let ppcSpanishStatus: PpcStatus = "OFF";
   let dataError: string | null = null;
@@ -498,6 +506,7 @@ async function DashboardContent({
       optionsResult,
       todayTotal,
       yesterdayTotal,
+      domainsResult,
       ppcSpanishValue,
       ppcEnglishValue,
     ] = await Promise.all([
@@ -522,6 +531,10 @@ async function DashboardContent({
           dateFilter: "yesterday",
           timezone,
         }),
+        getLeadCountsByDomain({
+          dateFilter,
+          timezone,
+        }),
         getPpcStatus("spanish"),
         getPpcStatus("english"),
       ]);
@@ -530,6 +543,7 @@ async function DashboardContent({
     filterOptions = optionsResult;
     todayCount = todayTotal;
     yesterdayCount = yesterdayTotal;
+    domainLeadCounts = domainsResult;
     ppcSpanishStatus = ppcSpanishValue;
     ppcEnglishStatus = ppcEnglishValue;
   } catch (error) {
@@ -593,7 +607,7 @@ async function DashboardContent({
               : "hidden min-h-0 flex-1 flex-col gap-3 sm:gap-4"
             }
         >
-          <div className="grid grid-cols-[1fr_auto] items-start gap-3 sm:gap-4">
+          <div className="grid grid-cols-[1fr_auto] items-start gap-3 sm:gap-4 xl:grid-cols-[1fr_255px_220px]">
             <div className="space-y-1">
               <CardTitle className="text-xl">Leads</CardTitle>
               <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
@@ -603,62 +617,64 @@ async function DashboardContent({
                 </span>
               </div>
             </div>
-            <div className="justify-self-end">
+            <div className="hidden xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:block">
+              <TrafficDomainsCard domains={domainLeadCounts} />
+            </div>
+            <div className="col-start-2 row-start-1 justify-self-end xl:col-start-3">
               <PpcStatusCard
                 initialEnglishStatus={ppcEnglishStatus}
                 initialSpanishStatus={ppcSpanishStatus}
               />
             </div>
-          </div>
+            <div className="col-span-2 row-start-2 flex flex-col gap-3 sm:gap-4 xl:col-span-1 xl:col-start-1">
+              <LeadIdSearch pathname={currentPath} />
 
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <LeadIdSearch pathname={currentPath} />
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-wrap gap-2">
-                  {dateFilters.map((filter) => (
-                    <FilterButton
-                      active={dateFilter === filter.value}
-                      className={
-                        filter.value === "7d" || filter.value === "all"
-                          ? "hidden xl:inline-flex"
-                          : undefined
-                      }
-                      href={makeDashboardHref(searchParams, {
-                        date: filter.value,
-                      }, currentPath)}
-                      key={filter.value}
-                    >
-                      {filter.label}
-                    </FilterButton>
-                  ))}
-                  <SortIconButton
-                    active={sort === "desc"}
-                    direction="desc"
-                    href={makeDashboardHref(
-                      searchParams,
-                      { sort: "desc" },
-                      currentPath,
-                    )}
-                  />
-                  <SortIconButton
-                    active={sort === "asc"}
-                    direction="asc"
-                    href={makeDashboardHref(
-                      searchParams,
-                      { sort: "asc" },
-                      currentPath,
-                    )}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    {dateFilters.map((filter) => (
+                      <FilterButton
+                        active={dateFilter === filter.value}
+                        className={
+                          filter.value === "7d" || filter.value === "all"
+                            ? "hidden xl:inline-flex"
+                            : undefined
+                        }
+                        href={makeDashboardHref(searchParams, {
+                          date: filter.value,
+                        }, currentPath)}
+                        key={filter.value}
+                      >
+                        {filter.label}
+                      </FilterButton>
+                    ))}
+                    <SortIconButton
+                      active={sort === "desc"}
+                      direction="desc"
+                      href={makeDashboardHref(
+                        searchParams,
+                        { sort: "desc" },
+                        currentPath,
+                      )}
+                    />
+                    <SortIconButton
+                      active={sort === "asc"}
+                      direction="asc"
+                      href={makeDashboardHref(
+                        searchParams,
+                        { sort: "asc" },
+                        currentPath,
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="ml-auto xl:hidden">
+                  <TimezoneSwitcher
+                    pathname={currentPath}
+                    searchParams={searchParams}
+                    timezone={timezone}
                   />
                 </div>
-              </div>
-              <div className="ml-auto xl:hidden">
-                <TimezoneSwitcher
-                  pathname={currentPath}
-                  searchParams={searchParams}
-                  timezone={timezone}
-                />
               </div>
             </div>
           </div>

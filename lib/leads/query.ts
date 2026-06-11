@@ -3,6 +3,7 @@ import { getDateRange } from "./date-filters";
 import type {
   DashboardTimezone,
   DateFilter,
+  DomainLeadCount,
   LeadFilterKey,
   LeadFilterOptions,
   LeadFilters,
@@ -289,6 +290,61 @@ export async function getLeadCountByDateFilter({
   }
 
   return count ?? 0;
+}
+
+export async function getLeadCountsByDomain({
+  dateFilter,
+  timezone,
+}: Pick<LeadQueryOptions, "dateFilter" | "timezone">) {
+  const supabase = createLeadsClient();
+  const range = getDateRange(dateFilter, timezone);
+  const pageSize = 1000;
+  const counts = new Map<string, number>();
+  let from = 0;
+
+  while (true) {
+    let query = supabase
+      .from("leads")
+      .select("domain")
+      .not("domain", "is", null)
+      .order("created_at", { ascending: true })
+      .order("lead_id", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (range) {
+      query = query.gte("created_at", range.from).lt("created_at", range.to);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const rows = (data ?? []) as Array<{ domain: string | null }>;
+
+    rows.forEach(({ domain }) => {
+      const normalizedDomain = domain?.trim();
+
+      if (normalizedDomain) {
+        counts.set(normalizedDomain, (counts.get(normalizedDomain) ?? 0) + 1);
+      }
+    });
+
+    if (rows.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
+  }
+
+  return Array.from(counts, ([domain, count]) => ({
+    domain,
+    count,
+  })).sort(
+    (left, right) =>
+      right.count - left.count || left.domain.localeCompare(right.domain),
+  ) satisfies DomainLeadCount[];
 }
 
 export async function getRecentReadyForSellLeads() {
